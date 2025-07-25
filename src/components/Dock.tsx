@@ -7,13 +7,17 @@ import {
   Folder, 
   Settings, 
   Terminal,
-  Search
+  FileSpreadsheet,
+  Presentation
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
 import NotesApp from '@/components/apps/NotesApp';
 import TerminalApp from '@/components/apps/TerminalApp';
 import BrowserApp from '@/components/apps/BrowserApp';
+import LibreOfficeWriter from '@/components/apps/LibreOfficeWriter';
+import LibreOfficeCalc from '@/components/apps/LibreOfficeCalc';
+import LibreOfficeImpress from '@/components/apps/LibreOfficeImpress';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode } = useOS();
@@ -25,6 +29,27 @@ const Dock: React.FC = () => {
       icon: Globe,
       component: BrowserApp,
       color: 'bg-blue-500'
+    },
+    {
+      id: 'writer',
+      title: 'Writer',
+      icon: FileText,
+      component: LibreOfficeWriter,
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'calc',
+      title: 'Calc',
+      icon: FileSpreadsheet,
+      component: LibreOfficeCalc,
+      color: 'bg-green-600'
+    },
+    {
+      id: 'impress',
+      title: 'Impress',
+      icon: Presentation,
+      component: LibreOfficeImpress,
+      color: 'bg-orange-600'
     },
     {
       id: 'notes',

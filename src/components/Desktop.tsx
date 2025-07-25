@@ -5,10 +5,13 @@ import MenuBar from './MenuBar';
 import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
-import { Folder, Trash2 } from 'lucide-react';
+import { Folder, Trash2, FileText, FileSpreadsheet, Presentation } from 'lucide-react';
+import LibreOfficeWriter from './apps/LibreOfficeWriter';
+import LibreOfficeCalc from './apps/LibreOfficeCalc';
+import LibreOfficeImpress from './apps/LibreOfficeImpress';
 
 const Desktop: React.FC = () => {
-  const { windows, isDarkMode } = useOS();
+  const { windows, isDarkMode, openWindow } = useOS();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const handleRightClick = (e: React.MouseEvent) => {
@@ -25,6 +28,10 @@ const Desktop: React.FC = () => {
     { label: 'Refresh', icon: null, action: () => window.location.reload() },
     { label: 'Empty Trash', icon: Trash2, action: () => console.log('Empty trash') }
   ];
+
+  const handleLibreOfficeAppClick = (app: { id: string; title: string; component: React.ComponentType<any> }) => {
+    openWindow(app);
+  };
 
   return (
     <div 
@@ -63,6 +70,49 @@ const Desktop: React.FC = () => {
             <Trash2 className="w-8 h-8 text-white" />
           </div>
           <span className="text-white text-xs text-center">Trash</span>
+        </div>
+
+        {/* LibreOffice Apps */}
+        <div 
+          className="flex flex-col items-center space-y-1 group cursor-pointer"
+          onClick={() => handleLibreOfficeAppClick({
+            id: 'writer',
+            title: 'LibreOffice Writer',
+            component: LibreOfficeWriter
+          })}
+        >
+          <div className="w-16 h-16 bg-blue-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-blue-500/90 transition-all">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-white text-xs text-center">Writer</span>
+        </div>
+
+        <div 
+          className="flex flex-col items-center space-y-1 group cursor-pointer"
+          onClick={() => handleLibreOfficeAppClick({
+            id: 'calc',
+            title: 'LibreOffice Calc',
+            component: LibreOfficeCalc
+          })}
+        >
+          <div className="w-16 h-16 bg-green-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-green-500/90 transition-all">
+            <FileSpreadsheet className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-white text-xs text-center">Calc</span>
+        </div>
+
+        <div 
+          className="flex flex-col items-center space-y-1 group cursor-pointer"
+          onClick={() => handleLibreOfficeAppClick({
+            id: 'impress',
+            title: 'LibreOffice Impress',
+            component: LibreOfficeImpress
+          })}
+        >
+          <div className="w-16 h-16 bg-orange-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-orange-500/90 transition-all">
+            <Presentation className="w-8 h-8 text-white" />
+          </div>
+          <span className="text-white text-xs text-center">Impress</span>
         </div>
       </div>
 
