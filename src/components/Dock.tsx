@@ -2,7 +2,7 @@
 import React from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
-  Safari, 
+  Globe, 
   FileText, 
   Folder, 
   Settings, 
@@ -22,7 +22,7 @@ const Dock: React.FC = () => {
     {
       id: 'browser',
       title: 'Safari',
-      icon: Safari,
+      icon: Globe,
       component: BrowserApp,
       color: 'bg-blue-500'
     },

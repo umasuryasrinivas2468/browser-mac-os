@@ -39,7 +39,7 @@ const Desktop: React.FC = () => {
       onContextMenu={handleRightClick}
       onClick={handleClickOutside}
     >
-      <style jsx>{`
+      <style>{`
         @keyframes gradient-shift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
