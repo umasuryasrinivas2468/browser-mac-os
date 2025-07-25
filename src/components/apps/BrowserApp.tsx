@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { ArrowLeft, ArrowRight, RotateCcw, Home, Search, Lock, Globe } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw, Home, Search, Lock, Globe, AlertTriangle } from 'lucide-react';
 
 const BrowserApp: React.FC = () => {
   const { isDarkMode } = useOS();
@@ -12,7 +12,21 @@ const BrowserApp: React.FC = () => {
   const [canGoForward, setCanGoForward] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [iframeError, setIframeError] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // List of iframe-friendly websites
+  const iframeFriendlyDomains = [
+    'google.com',
+    'duckduckgo.com',
+    'wikipedia.org',
+    'github.com',
+    'codepen.io',
+    'jsfiddle.net',
+    'example.com',
+    'httpbin.org',
+    'jsonplaceholder.typicode.com'
+  ];
 
   const formatUrl = (inputUrl: string): string => {
     if (!inputUrl.trim()) return '';
@@ -30,11 +44,27 @@ const BrowserApp: React.FC = () => {
     return inputUrl;
   };
 
+  const isIframeFriendly = (url: string): boolean => {
+    try {
+      const domain = new URL(url).hostname.replace('www.', '');
+      return iframeFriendlyDomains.some(friendly => domain.includes(friendly));
+    } catch {
+      return false;
+    }
+  };
+
+  const getProxyUrl = (targetUrl: string): string => {
+    // For demonstration, we'll use a public CORS proxy
+    // In production, you'd want to use your own proxy server
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+  };
+
   const navigateToUrl = (targetUrl: string) => {
     const formattedUrl = formatUrl(targetUrl);
     if (!formattedUrl) return;
 
     setIsLoading(true);
+    setIframeError(false);
     setCurrentUrl(formattedUrl);
     setUrl(formattedUrl);
 
@@ -66,6 +96,7 @@ const BrowserApp: React.FC = () => {
       setHistoryIndex(newIndex);
       setCanGoBack(newIndex > 0);
       setCanGoForward(true);
+      setIframeError(false);
     }
   };
 
@@ -78,12 +109,14 @@ const BrowserApp: React.FC = () => {
       setHistoryIndex(newIndex);
       setCanGoBack(true);
       setCanGoForward(newIndex < history.length - 1);
+      setIframeError(false);
     }
   };
 
   const handleReload = () => {
     if (currentUrl) {
       setIsLoading(true);
+      setIframeError(false);
       if (iframeRef.current) {
         iframeRef.current.src = currentUrl;
       }
@@ -95,13 +128,32 @@ const BrowserApp: React.FC = () => {
     navigateToUrl('https://www.google.com');
   };
 
+  const handleIframeLoad = () => {
+    setIsLoading(false);
+    setIframeError(false);
+  };
+
+  const handleIframeError = () => {
+    setIsLoading(false);
+    setIframeError(true);
+  };
+
+  const openInProxy = () => {
+    if (currentUrl) {
+      const proxyUrl = getProxyUrl(currentUrl);
+      setCurrentUrl(proxyUrl);
+      setIframeError(false);
+      setIsLoading(true);
+    }
+  };
+
   const bookmarks = [
     { name: 'Google', url: 'https://www.google.com' },
-    { name: 'GitHub', url: 'https://github.com' },
-    { name: 'Stack Overflow', url: 'https://stackoverflow.com' },
-    { name: 'MDN', url: 'https://developer.mozilla.org' },
+    { name: 'DuckDuckGo', url: 'https://duckduckgo.com' },
     { name: 'Wikipedia', url: 'https://www.wikipedia.org' },
-    { name: 'YouTube', url: 'https://www.youtube.com' }
+    { name: 'GitHub', url: 'https://github.com' },
+    { name: 'CodePen', url: 'https://codepen.io' },
+    { name: 'Example', url: 'https://example.com' }
   ];
 
   return (
@@ -193,13 +245,47 @@ const BrowserApp: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 relative">
         {currentUrl ? (
-          <iframe
-            ref={iframeRef}
-            src={currentUrl}
-            className="w-full h-full border-none"
-            title="Browser Content"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
-          />
+          <>
+            {iframeError ? (
+              <div className="flex-1 flex items-center justify-center h-full">
+                <div className="text-center max-w-md mx-auto p-6">
+                  <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Cannot Load Website</h3>
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    This website cannot be displayed in an iframe due to security restrictions.
+                  </p>
+                  <div className="space-y-2">
+                    <button
+                      onClick={openInProxy}
+                      className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
+                    >
+                      Try Proxy Mode
+                    </button>
+                    <button
+                      onClick={() => window.open(currentUrl, '_blank')}
+                      className={`w-full py-2 px-4 rounded border transition-colors ${
+                        isDarkMode 
+                          ? 'border-gray-600 hover:bg-gray-700' 
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      Open in New Tab
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <iframe
+                ref={iframeRef}
+                src={currentUrl}
+                className="w-full h-full border-none"
+                title="Browser Content"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
+                onLoad={handleIframeLoad}
+                onError={handleIframeError}
+              />
+            )}
+          </>
         ) : (
           <div className="flex-1 flex items-center justify-center h-full">
             <div className="text-center max-w-md mx-auto p-6">
@@ -207,7 +293,7 @@ const BrowserApp: React.FC = () => {
                 <Globe className="w-16 h-16 text-white" />
               </div>
               
-              <h2 className="text-2xl font-semibold mb-4">Welcome to Safari</h2>
+              <h2 className="text-2xl font-semibold mb-4">Welcome to Browser</h2>
               <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Enter a website URL or search term to browse the web.
               </p>
@@ -250,6 +336,15 @@ const BrowserApp: React.FC = () => {
                   </button>
                 ))}
               </div>
+
+              <div className={`mt-6 p-3 rounded-lg ${
+                isDarkMode ? 'bg-gray-700' : 'bg-yellow-50'
+              }`}>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-yellow-800'}`}>
+                  <strong>Note:</strong> Some websites may not load due to security restrictions. 
+                  Try the suggested iframe-friendly sites or use proxy mode.
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -259,7 +354,7 @@ const BrowserApp: React.FC = () => {
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
             <div className="flex items-center space-x-2 bg-white/90 px-4 py-2 rounded-lg">
               <RotateCcw className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Loading...</span>
+              <span className="text-sm text-gray-900">Loading...</span>
             </div>
           </div>
         )}
