@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
@@ -33,126 +34,166 @@ const Desktop: React.FC = () => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 overflow-hidden"
-      style={{
-        background: isDarkMode 
-          ? `linear-gradient(135deg, #1e1e2e 0%, #2d3748 25%, #4a5568 50%, #2d3748 75%, #1e1e2e 100%)`
-          : `linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)`,
-        backgroundSize: '400% 400%',
-        animation: 'gradient-shift 15s ease infinite'
-      }}
-      onContextMenu={handleRightClick}
-      onClick={handleClickOutside}
-    >
+    <>
       <style>{`
+        * {
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>') 12 12, auto;
+        }
+        
+        .desktop-cursor {
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>') 12 12, auto;
+        }
+        
+        .mountain-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+          background-size: 400% 400%;
+          animation: gradient-shift 20s ease infinite;
+        }
+        
+        .mountain-overlay {
+          background-image: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+          animation: mountain-float 25s ease-in-out infinite;
+        }
+        
         @keyframes gradient-shift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        
+        @keyframes mountain-float {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-10px) scale(1.02); }
+        }
+        
+        .glass-icon {
+          backdrop-filter: blur(12px);
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .glass-icon:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
       `}</style>
 
-      <MenuBar />
-      
-      {/* Desktop Icons */}
-      <div className="absolute top-20 left-4 space-y-4">
-        <div className="flex flex-col items-center space-y-1 group cursor-pointer">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all">
-            <Folder className="w-8 h-8 text-white" />
-          </div>
-          <span className="text-white text-xs text-center">Documents</span>
-        </div>
+      <div 
+        className="fixed inset-0 overflow-hidden desktop-cursor mountain-bg"
+        onContextMenu={handleRightClick}
+        onClick={handleClickOutside}
+      >
+        <div className="absolute inset-0 mountain-overlay"></div>
+
+        <MenuBar />
         
-        <div className="flex flex-col items-center space-y-1 group cursor-pointer">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all">
-            <Trash2 className="w-8 h-8 text-white" />
+        {/* Desktop Icons */}
+        <div className="absolute top-20 left-6 space-y-6 z-10">
+          <div className="flex flex-col items-center space-y-2 group cursor-pointer">
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+              <Folder className="w-9 h-9 text-white drop-shadow-lg" />
+            </div>
+            <span className="text-white text-sm font-medium drop-shadow-lg">Documents</span>
           </div>
-          <span className="text-white text-xs text-center">Trash</span>
+          
+          <div className="flex flex-col items-center space-y-2 group cursor-pointer">
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+              <Trash2 className="w-9 h-9 text-white drop-shadow-lg" />
+            </div>
+            <span className="text-white text-sm font-medium drop-shadow-lg">Trash</span>
+          </div>
+
+          {/* ONLYOFFICE Apps */}
+          <div 
+            className="flex flex-col items-center space-y-2 group cursor-pointer"
+            onClick={() => handleOnlyOfficeAppClick({
+              id: 'writer',
+              title: 'ONLYOFFICE Writer',
+              component: OnlyOfficeWriter
+            })}
+          >
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl"></div>
+              <FileText className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-sm font-medium drop-shadow-lg">Writer</span>
+          </div>
+
+          <div 
+            className="flex flex-col items-center space-y-2 group cursor-pointer"
+            onClick={() => handleOnlyOfficeAppClick({
+              id: 'calc',
+              title: 'ONLYOFFICE Calc',
+              component: OnlyOfficeCalc
+            })}
+          >
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl"></div>
+              <FileSpreadsheet className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-sm font-medium drop-shadow-lg">Calc</span>
+          </div>
+
+          <div 
+            className="flex flex-col items-center space-y-2 group cursor-pointer"
+            onClick={() => handleOnlyOfficeAppClick({
+              id: 'impress',
+              title: 'ONLYOFFICE Impress',
+              component: OnlyOfficeImpress
+            })}
+          >
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl"></div>
+              <Presentation className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-sm font-medium drop-shadow-lg">Impress</span>
+          </div>
         </div>
 
-        {/* ONLYOFFICE Apps */}
-        <div 
-          className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleOnlyOfficeAppClick({
-            id: 'writer',
-            title: 'ONLYOFFICE Writer',
-            component: OnlyOfficeWriter
-          })}
-        >
-          <div className="w-16 h-16 bg-blue-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-blue-500/90 transition-all">
-            <FileText className="w-8 h-8 text-white" />
-          </div>
-          <span className="text-white text-xs text-center">Writer</span>
-        </div>
+        {/* Windows */}
+        {windows.map((window) => (
+          <Window key={window.id} window={window} />
+        ))}
 
-        <div 
-          className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleOnlyOfficeAppClick({
-            id: 'calc',
-            title: 'ONLYOFFICE Calc',
-            component: OnlyOfficeCalc
-          })}
-        >
-          <div className="w-16 h-16 bg-green-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-green-500/90 transition-all">
-            <FileSpreadsheet className="w-8 h-8 text-white" />
-          </div>
-          <span className="text-white text-xs text-center">Calc</span>
-        </div>
+        <Dock />
+        <SpotlightSearch />
 
-        <div 
-          className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleOnlyOfficeAppClick({
-            id: 'impress',
-            title: 'ONLYOFFICE Impress',
-            component: OnlyOfficeImpress
-          })}
-        >
-          <div className="w-16 h-16 bg-orange-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-orange-500/90 transition-all">
-            <Presentation className="w-8 h-8 text-white" />
+        {/* Context Menu */}
+        {contextMenu && (
+          <div
+            className={`fixed z-50 py-2 rounded-xl shadow-2xl border backdrop-blur-md min-w-[180px] ${
+              isDarkMode 
+                ? 'bg-gray-800/90 border-gray-700' 
+                : 'bg-white/90 border-gray-200'
+            }`}
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onClick={handleClickOutside}
+          >
+            {contextMenuItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  item.action();
+                  setContextMenu(null);
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-100 transition-colors ${
+                  isDarkMode ? 'hover:bg-gray-700 text-white' : 'text-gray-900'
+                }`}
+              >
+                {item.icon && <item.icon className="w-4 h-4" />}
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
           </div>
-          <span className="text-white text-xs text-center">Impress</span>
-        </div>
+        )}
       </div>
-
-      {/* Windows */}
-      {windows.map((window) => (
-        <Window key={window.id} window={window} />
-      ))}
-
-      <Dock />
-      <SpotlightSearch />
-
-      {/* Context Menu */}
-      {contextMenu && (
-        <div
-          className={`fixed z-50 py-2 rounded-lg shadow-lg border min-w-[150px] ${
-            isDarkMode 
-              ? 'bg-gray-800 border-gray-700' 
-              : 'bg-white border-gray-200'
-          }`}
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={handleClickOutside}
-        >
-          {contextMenuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-                item.action();
-                setContextMenu(null);
-              }}
-              className={`w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-100 transition-colors ${
-                isDarkMode ? 'hover:bg-gray-700 text-white' : 'text-gray-900'
-              }`}
-            >
-              {item.icon && <item.icon className="w-4 h-4" />}
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
