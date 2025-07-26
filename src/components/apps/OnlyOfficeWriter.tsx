@@ -1,49 +1,130 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { FileText, Upload, Download, Save } from 'lucide-react';
+import { FileText, Upload, Save, Download } from 'lucide-react';
 
-const LibreOfficeWriter: React.FC = () => {
+declare global {
+  interface Window {
+    DocsAPI: any;
+  }
+}
+
+const OnlyOfficeWriter: React.FC = () => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const docEditorRef = useRef<any>(null);
 
-  // Mock LibreOffice Online instance URL (replace with actual instance)
-  const COLLABORA_BASE_URL = 'https://demo.collaboraonline.com/loleaflet/dist/loleaflet.html';
+  useEffect(() => {
+    // Load ONLYOFFICE API script
+    if (!document.getElementById('onlyoffice-api')) {
+      const script = document.createElement('script');
+      script.id = 'onlyoffice-api';
+      script.src = 'https://documentserver.onlyoffice.com/web-apps/apps/api/documents/api.js';
+      script.onload = () => {
+        console.log('ONLYOFFICE API loaded');
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const initializeEditor = (fileName: string, fileData?: string) => {
+    if (!window.DocsAPI || !editorRef.current) return;
+
+    // Destroy existing editor
+    if (docEditorRef.current) {
+      docEditorRef.current.destroyEditor();
+    }
+
+    const config = {
+      document: {
+        fileType: 'docx',
+        key: `${fileName}_${Date.now()}`,
+        title: fileName,
+        url: fileData || '',
+        permissions: {
+          edit: true,
+          download: true,
+          print: true,
+        },
+      },
+      documentType: 'text',
+      editorConfig: {
+        mode: 'edit',
+        lang: 'en',
+        user: {
+          id: 'user1',
+          name: 'User',
+        },
+        customization: {
+          autosave: true,
+          forcesave: true,
+          compactToolbar: true,
+          theme: {
+            id: isDarkMode ? 'theme-dark' : 'theme-classic-light',
+          },
+        },
+      },
+      width: '100%',
+      height: '100%',
+      events: {
+        onDocumentReady: () => {
+          setIsLoading(false);
+          console.log('Document ready');
+        },
+        onError: (error: any) => {
+          console.error('ONLYOFFICE error:', error);
+          setIsLoading(false);
+        },
+      },
+    };
+
+    docEditorRef.current = new window.DocsAPI.DocEditor(editorRef.current, config);
+  };
 
   const handleNewDocument = () => {
     setIsLoading(true);
-    const fileName = `document_${Date.now()}.odt`;
+    const fileName = `document_${Date.now()}.docx`;
     setCurrentFile(fileName);
-    // Store in localStorage to simulate file system
-    localStorage.setItem(`libreoffice_${fileName}`, JSON.stringify({
+    
+    // Create empty document data
+    const emptyDocData = 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,';
+    
+    localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
       name: fileName,
       type: 'writer',
       created: new Date().toISOString(),
-      content: ''
+      content: emptyDocData
     }));
-    setTimeout(() => setIsLoading(false), 1000);
+
+    setTimeout(() => {
+      initializeEditor(fileName, emptyDocData);
+    }, 1000);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && (file.name.endsWith('.docx') || file.name.endsWith('.doc'))) {
       setIsLoading(true);
       const fileName = file.name;
       setCurrentFile(fileName);
       
-      // Simulate file processing
       const reader = new FileReader();
       reader.onload = (e) => {
-        localStorage.setItem(`libreoffice_${fileName}`, JSON.stringify({
+        const fileData = e.target?.result as string;
+        localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
           name: fileName,
           type: 'writer',
           created: new Date().toISOString(),
-          content: e.target?.result
+          content: fileData
         }));
-        setTimeout(() => setIsLoading(false), 1000);
+        
+        setTimeout(() => {
+          initializeEditor(fileName, fileData);
+        }, 1000);
       };
-      reader.readAsText(file);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -51,7 +132,7 @@ const LibreOfficeWriter: React.FC = () => {
     const files = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith('libreoffice_')) {
+      if (key?.startsWith('onlyoffice_')) {
         try {
           const fileData = JSON.parse(localStorage.getItem(key) || '{}');
           if (fileData.type === 'writer') {
@@ -63,6 +144,14 @@ const LibreOfficeWriter: React.FC = () => {
       }
     }
     return files;
+  };
+
+  const handleFileSelect = (file: any) => {
+    setIsLoading(true);
+    setCurrentFile(file.name);
+    setTimeout(() => {
+      initializeEditor(file.name, file.content);
+    }, 1000);
   };
 
   return (
@@ -89,10 +178,10 @@ const LibreOfficeWriter: React.FC = () => {
             : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
         }`}>
           <Upload className="w-4 h-4" />
-          <span className="text-sm">Upload</span>
+          <span className="text-sm">Upload DOCX</span>
           <input
             type="file"
-            accept=".odt,.doc,.docx"
+            accept=".docx,.doc"
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -121,7 +210,7 @@ const LibreOfficeWriter: React.FC = () => {
             {getSavedFiles().map((file, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentFile(file.name)}
+                onClick={() => handleFileSelect(file)}
                 className={`w-full flex items-center space-x-2 p-2 rounded-lg text-left transition-colors ${
                   currentFile === file.name
                     ? 'bg-blue-500 text-white'
@@ -137,28 +226,23 @@ const LibreOfficeWriter: React.FC = () => {
           </div>
         </div>
 
-        {/* LibreOffice Embed */}
+        {/* ONLYOFFICE Editor */}
         <div className="flex-1 relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : currentFile ? (
-            <iframe
-              src={`${COLLABORA_BASE_URL}?file_path=${encodeURIComponent(currentFile)}&permission=edit`}
-              className="w-full h-full border-none"
-              title="LibreOffice Writer"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            />
+            <div ref={editorRef} className="w-full h-full" />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <FileText className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                 <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  LibreOffice Writer
+                  ONLYOFFICE Writer
                 </h3>
                 <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Create a new document or open an existing one
+                  Create a new document or open an existing DOCX file
                 </p>
                 <button
                   onClick={handleNewDocument}
@@ -175,4 +259,4 @@ const LibreOfficeWriter: React.FC = () => {
   );
 };
 
-export default LibreOfficeWriter;
+export default OnlyOfficeWriter;

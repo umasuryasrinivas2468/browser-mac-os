@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -15,9 +14,9 @@ import FileManager from '@/components/apps/FileManager';
 import NotesApp from '@/components/apps/NotesApp';
 import TerminalApp from '@/components/apps/TerminalApp';
 import BrowserApp from '@/components/apps/BrowserApp';
-import LibreOfficeWriter from '@/components/apps/LibreOfficeWriter';
-import LibreOfficeCalc from '@/components/apps/LibreOfficeCalc';
-import LibreOfficeImpress from '@/components/apps/LibreOfficeImpress';
+import OnlyOfficeWriter from '@/components/apps/OnlyOfficeWriter';
+import OnlyOfficeCalc from '@/components/apps/OnlyOfficeCalc';
+import OnlyOfficeImpress from '@/components/apps/OnlyOfficeImpress';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode } = useOS();
@@ -34,21 +33,21 @@ const Dock: React.FC = () => {
       id: 'writer',
       title: 'Writer',
       icon: FileText,
-      component: LibreOfficeWriter,
+      component: OnlyOfficeWriter,
       color: 'bg-blue-600'
     },
     {
       id: 'calc',
       title: 'Calc',
       icon: FileSpreadsheet,
-      component: LibreOfficeCalc,
+      component: OnlyOfficeCalc,
       color: 'bg-green-600'
     },
     {
       id: 'impress',
       title: 'Impress',
       icon: Presentation,
-      component: LibreOfficeImpress,
+      component: OnlyOfficeImpress,
       color: 'bg-orange-600'
     },
     {

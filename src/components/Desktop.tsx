@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
@@ -6,9 +5,9 @@ import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
 import { Folder, Trash2, FileText, FileSpreadsheet, Presentation } from 'lucide-react';
-import LibreOfficeWriter from './apps/LibreOfficeWriter';
-import LibreOfficeCalc from './apps/LibreOfficeCalc';
-import LibreOfficeImpress from './apps/LibreOfficeImpress';
+import OnlyOfficeWriter from './apps/OnlyOfficeWriter';
+import OnlyOfficeCalc from './apps/OnlyOfficeCalc';
+import OnlyOfficeImpress from './apps/OnlyOfficeImpress';
 
 const Desktop: React.FC = () => {
   const { windows, isDarkMode, openWindow } = useOS();
@@ -29,7 +28,7 @@ const Desktop: React.FC = () => {
     { label: 'Empty Trash', icon: Trash2, action: () => console.log('Empty trash') }
   ];
 
-  const handleLibreOfficeAppClick = (app: { id: string; title: string; component: React.ComponentType<any> }) => {
+  const handleOnlyOfficeAppClick = (app: { id: string; title: string; component: React.ComponentType<any> }) => {
     openWindow(app);
   };
 
@@ -72,13 +71,13 @@ const Desktop: React.FC = () => {
           <span className="text-white text-xs text-center">Trash</span>
         </div>
 
-        {/* LibreOffice Apps */}
+        {/* ONLYOFFICE Apps */}
         <div 
           className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleLibreOfficeAppClick({
+          onClick={() => handleOnlyOfficeAppClick({
             id: 'writer',
-            title: 'LibreOffice Writer',
-            component: LibreOfficeWriter
+            title: 'ONLYOFFICE Writer',
+            component: OnlyOfficeWriter
           })}
         >
           <div className="w-16 h-16 bg-blue-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-blue-500/90 transition-all">
@@ -89,10 +88,10 @@ const Desktop: React.FC = () => {
 
         <div 
           className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleLibreOfficeAppClick({
+          onClick={() => handleOnlyOfficeAppClick({
             id: 'calc',
-            title: 'LibreOffice Calc',
-            component: LibreOfficeCalc
+            title: 'ONLYOFFICE Calc',
+            component: OnlyOfficeCalc
           })}
         >
           <div className="w-16 h-16 bg-green-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-green-500/90 transition-all">
@@ -103,10 +102,10 @@ const Desktop: React.FC = () => {
 
         <div 
           className="flex flex-col items-center space-y-1 group cursor-pointer"
-          onClick={() => handleLibreOfficeAppClick({
+          onClick={() => handleOnlyOfficeAppClick({
             id: 'impress',
-            title: 'LibreOffice Impress',
-            component: LibreOfficeImpress
+            title: 'ONLYOFFICE Impress',
+            component: OnlyOfficeImpress
           })}
         >
           <div className="w-16 h-16 bg-orange-500/80 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-orange-500/90 transition-all">

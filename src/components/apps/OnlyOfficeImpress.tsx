@@ -1,47 +1,130 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Presentation, Upload, Save } from 'lucide-react';
 
-const LibreOfficeImpress: React.FC = () => {
+declare global {
+  interface Window {
+    DocsAPI: any;
+  }
+}
+
+const OnlyOfficeImpress: React.FC = () => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const docEditorRef = useRef<any>(null);
 
-  // Mock LibreOffice Online instance URL (replace with actual instance)
-  const COLLABORA_BASE_URL = 'https://demo.collaboraonline.com/loleaflet/dist/loleaflet.html';
+  useEffect(() => {
+    // Load ONLYOFFICE API script
+    if (!document.getElementById('onlyoffice-api')) {
+      const script = document.createElement('script');
+      script.id = 'onlyoffice-api';
+      script.src = 'https://documentserver.onlyoffice.com/web-apps/apps/api/documents/api.js';
+      script.onload = () => {
+        console.log('ONLYOFFICE API loaded');
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const initializeEditor = (fileName: string, fileData?: string) => {
+    if (!window.DocsAPI || !editorRef.current) return;
+
+    // Destroy existing editor
+    if (docEditorRef.current) {
+      docEditorRef.current.destroyEditor();
+    }
+
+    const config = {
+      document: {
+        fileType: 'pptx',
+        key: `${fileName}_${Date.now()}`,
+        title: fileName,
+        url: fileData || '',
+        permissions: {
+          edit: true,
+          download: true,
+          print: true,
+        },
+      },
+      documentType: 'slide',
+      editorConfig: {
+        mode: 'edit',
+        lang: 'en',
+        user: {
+          id: 'user1',
+          name: 'User',
+        },
+        customization: {
+          autosave: true,
+          forcesave: true,
+          compactToolbar: true,
+          theme: {
+            id: isDarkMode ? 'theme-dark' : 'theme-classic-light',
+          },
+        },
+      },
+      width: '100%',
+      height: '100%',
+      events: {
+        onDocumentReady: () => {
+          setIsLoading(false);
+          console.log('Presentation ready');
+        },
+        onError: (error: any) => {
+          console.error('ONLYOFFICE error:', error);
+          setIsLoading(false);
+        },
+      },
+    };
+
+    docEditorRef.current = new window.DocsAPI.DocEditor(editorRef.current, config);
+  };
 
   const handleNewPresentation = () => {
     setIsLoading(true);
-    const fileName = `presentation_${Date.now()}.odp`;
+    const fileName = `presentation_${Date.now()}.pptx`;
     setCurrentFile(fileName);
-    localStorage.setItem(`libreoffice_${fileName}`, JSON.stringify({
+    
+    // Create empty presentation data
+    const emptyPptxData = 'data:application/vnd.openxmlformats-officedocument.presentationml.presentation;base64,';
+    
+    localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
       name: fileName,
       type: 'impress',
       created: new Date().toISOString(),
-      content: ''
+      content: emptyPptxData
     }));
-    setTimeout(() => setIsLoading(false), 1000);
+
+    setTimeout(() => {
+      initializeEditor(fileName, emptyPptxData);
+    }, 1000);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && (file.name.endsWith('.pptx') || file.name.endsWith('.ppt'))) {
       setIsLoading(true);
       const fileName = file.name;
       setCurrentFile(fileName);
       
       const reader = new FileReader();
       reader.onload = (e) => {
-        localStorage.setItem(`libreoffice_${fileName}`, JSON.stringify({
+        const fileData = e.target?.result as string;
+        localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
           name: fileName,
           type: 'impress',
           created: new Date().toISOString(),
-          content: e.target?.result
+          content: fileData
         }));
-        setTimeout(() => setIsLoading(false), 1000);
+        
+        setTimeout(() => {
+          initializeEditor(fileName, fileData);
+        }, 1000);
       };
-      reader.readAsText(file);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -49,7 +132,7 @@ const LibreOfficeImpress: React.FC = () => {
     const files = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith('libreoffice_')) {
+      if (key?.startsWith('onlyoffice_')) {
         try {
           const fileData = JSON.parse(localStorage.getItem(key) || '{}');
           if (fileData.type === 'impress') {
@@ -61,6 +144,14 @@ const LibreOfficeImpress: React.FC = () => {
       }
     }
     return files;
+  };
+
+  const handleFileSelect = (file: any) => {
+    setIsLoading(true);
+    setCurrentFile(file.name);
+    setTimeout(() => {
+      initializeEditor(file.name, file.content);
+    }, 1000);
   };
 
   return (
@@ -87,10 +178,10 @@ const LibreOfficeImpress: React.FC = () => {
             : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
         }`}>
           <Upload className="w-4 h-4" />
-          <span className="text-sm">Upload</span>
+          <span className="text-sm">Upload PPTX</span>
           <input
             type="file"
-            accept=".odp,.ppt,.pptx"
+            accept=".pptx,.ppt"
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -119,7 +210,7 @@ const LibreOfficeImpress: React.FC = () => {
             {getSavedFiles().map((file, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentFile(file.name)}
+                onClick={() => handleFileSelect(file)}
                 className={`w-full flex items-center space-x-2 p-2 rounded-lg text-left transition-colors ${
                   currentFile === file.name
                     ? 'bg-orange-500 text-white'
@@ -135,28 +226,23 @@ const LibreOfficeImpress: React.FC = () => {
           </div>
         </div>
 
-        {/* LibreOffice Embed */}
+        {/* ONLYOFFICE Editor */}
         <div className="flex-1 relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
           ) : currentFile ? (
-            <iframe
-              src={`${COLLABORA_BASE_URL}?file_path=${encodeURIComponent(currentFile)}&permission=edit`}
-              className="w-full h-full border-none"
-              title="LibreOffice Impress"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            />
+            <div ref={editorRef} className="w-full h-full" />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Presentation className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                 <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  LibreOffice Impress
+                  ONLYOFFICE Impress
                 </h3>
                 <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Create a new presentation or open an existing one
+                  Create a new presentation or open an existing PPTX file
                 </p>
                 <button
                   onClick={handleNewPresentation}
@@ -173,4 +259,4 @@ const LibreOfficeImpress: React.FC = () => {
   );
 };
 
-export default LibreOfficeImpress;
+export default OnlyOfficeImpress;
