@@ -1,14 +1,11 @@
-
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
 import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
-import { Folder, Trash2, FileText, FileSpreadsheet, Presentation } from 'lucide-react';
-import OnlyOfficeWriter from './apps/OnlyOfficeWriter';
-import OnlyOfficeCalc from './apps/OnlyOfficeCalc';
-import OnlyOfficeImpress from './apps/OnlyOfficeImpress';
+import { Folder, Trash2, FileText } from 'lucide-react';
+import TextEditor from './apps/TextEditor';
 
 const Desktop: React.FC = () => {
   const { windows, isDarkMode, openWindow } = useOS();
@@ -29,8 +26,12 @@ const Desktop: React.FC = () => {
     { label: 'Empty Trash', icon: Trash2, action: () => console.log('Empty trash') }
   ];
 
-  const handleOnlyOfficeAppClick = (app: { id: string; title: string; component: React.ComponentType<any> }) => {
-    openWindow(app);
+  const handleTextEditorClick = () => {
+    openWindow({
+      id: 'texteditor',
+      title: 'TextEdit',
+      component: TextEditor
+    });
   };
 
   return (
@@ -108,50 +109,16 @@ const Desktop: React.FC = () => {
             <span className="text-white text-sm font-medium drop-shadow-lg">Trash</span>
           </div>
 
-          {/* ONLYOFFICE Apps */}
+          {/* TextEdit App */}
           <div 
             className="flex flex-col items-center space-y-2 group cursor-pointer"
-            onClick={() => handleOnlyOfficeAppClick({
-              id: 'writer',
-              title: 'ONLYOFFICE Writer',
-              component: OnlyOfficeWriter
-            })}
+            onClick={handleTextEditorClick}
           >
             <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl"></div>
               <FileText className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
             </div>
-            <span className="text-white text-sm font-medium drop-shadow-lg">Writer</span>
-          </div>
-
-          <div 
-            className="flex flex-col items-center space-y-2 group cursor-pointer"
-            onClick={() => handleOnlyOfficeAppClick({
-              id: 'calc',
-              title: 'ONLYOFFICE Calc',
-              component: OnlyOfficeCalc
-            })}
-          >
-            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl"></div>
-              <FileSpreadsheet className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
-            </div>
-            <span className="text-white text-sm font-medium drop-shadow-lg">Calc</span>
-          </div>
-
-          <div 
-            className="flex flex-col items-center space-y-2 group cursor-pointer"
-            onClick={() => handleOnlyOfficeAppClick({
-              id: 'impress',
-              title: 'ONLYOFFICE Impress',
-              component: OnlyOfficeImpress
-            })}
-          >
-            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-2xl"></div>
-              <Presentation className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
-            </div>
-            <span className="text-white text-sm font-medium drop-shadow-lg">Impress</span>
+            <span className="text-white text-sm font-medium drop-shadow-lg">TextEdit</span>
           </div>
         </div>
 

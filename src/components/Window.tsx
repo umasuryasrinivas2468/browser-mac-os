@@ -10,19 +10,20 @@ interface WindowProps {
 const Window: React.FC<WindowProps> = ({ window }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, updateWindowPosition, updateWindowSize, isDarkMode } = useOS();
   const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('window-header')) {
-      setIsDragging(true);
-      const rect = windowRef.current?.getBoundingClientRect();
-      if (rect) {
-        setDragOffset({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        });
+      if (!window.isMaximized) {
+        setIsDragging(true);
+        const rect = windowRef.current?.getBoundingClientRect();
+        if (rect) {
+          setDragOffset({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+          });
+        }
       }
       focusWindow(window.id);
     }
@@ -31,7 +32,7 @@ const Window: React.FC<WindowProps> = ({ window }) => {
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && !window.isMaximized) {
       const newX = e.clientX - dragOffset.x;
-      const newY = Math.max(32, e.clientY - dragOffset.y); // Don't let it go above menu bar
+      const newY = Math.max(32, e.clientY - dragOffset.y);
       updateWindowPosition(window.id, { x: newX, y: newY });
     }
   };
@@ -60,7 +61,9 @@ const Window: React.FC<WindowProps> = ({ window }) => {
   return (
     <div
       ref={windowRef}
-      className={`fixed animate-window-open shadow-2xl rounded-xl overflow-hidden ${
+      className={`fixed animate-window-open shadow-2xl overflow-hidden ${
+        window.isMaximized ? 'rounded-none' : 'rounded-xl'
+      } ${
         isDarkMode 
           ? 'bg-gray-800 border border-gray-700' 
           : 'bg-white border border-gray-200'
@@ -74,9 +77,11 @@ const Window: React.FC<WindowProps> = ({ window }) => {
       }}
       onMouseDown={() => focusWindow(window.id)}
     >
-      {/* Window Header */}
+      {/* Window Header - Always visible */}
       <div
-        className={`window-header h-8 flex items-center justify-between px-4 cursor-move ${
+        className={`window-header h-8 flex items-center justify-between px-4 ${
+          window.isMaximized ? 'cursor-default' : 'cursor-move'
+        } ${
           isDarkMode 
             ? 'bg-gray-700 border-b border-gray-600' 
             : 'bg-gray-50 border-b border-gray-200'
@@ -108,7 +113,7 @@ const Window: React.FC<WindowProps> = ({ window }) => {
           {window.title}
         </div>
         
-        <div className="w-12"></div> {/* Spacer for centering */}
+        <div className="w-12"></div>
       </div>
 
       {/* Window Content */}

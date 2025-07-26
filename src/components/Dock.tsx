@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -13,42 +14,26 @@ import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
 import NotesApp from '@/components/apps/NotesApp';
 import TerminalApp from '@/components/apps/TerminalApp';
-import BrowserApp from '@/components/apps/BrowserApp';
-import OnlyOfficeWriter from '@/components/apps/OnlyOfficeWriter';
-import OnlyOfficeCalc from '@/components/apps/OnlyOfficeCalc';
-import OnlyOfficeImpress from '@/components/apps/OnlyOfficeImpress';
+import WebBrowser from '@/components/apps/WebBrowser';
+import TextEditor from '@/components/apps/TextEditor';
 
 const Dock: React.FC = () => {
-  const { openWindow, isDarkMode } = useOS();
+  const { openWindow, isDarkMode, windows } = useOS();
 
   const dockApps = [
     {
       id: 'browser',
       title: 'Safari',
       icon: Globe,
-      component: BrowserApp,
+      component: WebBrowser,
       color: 'bg-blue-500'
     },
     {
-      id: 'writer',
-      title: 'Writer',
+      id: 'texteditor',
+      title: 'TextEdit',
       icon: FileText,
-      component: OnlyOfficeWriter,
+      component: TextEditor,
       color: 'bg-blue-600'
-    },
-    {
-      id: 'calc',
-      title: 'Calc',
-      icon: FileSpreadsheet,
-      component: OnlyOfficeCalc,
-      color: 'bg-green-600'
-    },
-    {
-      id: 'impress',
-      title: 'Impress',
-      icon: Presentation,
-      component: OnlyOfficeImpress,
-      color: 'bg-orange-600'
     },
     {
       id: 'notes',
@@ -88,6 +73,14 @@ const Dock: React.FC = () => {
     });
   };
 
+  const isAppMinimized = (appId: string) => {
+    return windows.some(window => window.id === appId && window.isMinimized);
+  };
+
+  const isAppOpen = (appId: string) => {
+    return windows.some(window => window.id === appId);
+  };
+
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
       <div className={`flex items-end space-x-2 px-4 py-3 rounded-2xl ${
@@ -96,23 +89,31 @@ const Dock: React.FC = () => {
           : 'bg-white/40 backdrop-blur-xl border border-black/20'
       }`}>
         {dockApps.map((app) => (
-          <button
-            key={app.id}
-            onClick={() => handleAppClick(app)}
-            className={`
-              w-14 h-14 rounded-xl ${app.color} flex items-center justify-center 
-              transition-all duration-200 hover:scale-110 hover:-translate-y-1 
-              active:scale-95 shadow-lg group
-            `}
-            title={app.title}
-          >
-            <app.icon className="w-6 h-6 text-white" />
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 
-                          bg-black/75 text-white text-xs py-1 px-2 rounded 
-                          opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-              {app.title}
-            </div>
-          </button>
+          <div key={app.id} className="relative">
+            <button
+              onClick={() => handleAppClick(app)}
+              className={`
+                w-14 h-14 rounded-xl ${app.color} flex items-center justify-center 
+                transition-all duration-200 hover:scale-110 hover:-translate-y-1 
+                active:scale-95 shadow-lg group relative
+              `}
+              title={app.title}
+            >
+              <app.icon className="w-6 h-6 text-white" />
+              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 
+                            bg-black/75 text-white text-xs py-1 px-2 rounded 
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                {app.title}
+              </div>
+            </button>
+            
+            {/* Indicator dot for open/minimized apps */}
+            {isAppOpen(app.id) && (
+              <div className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
+                isAppMinimized(app.id) ? 'bg-orange-400' : 'bg-white'
+              }`} />
+            )}
+          </div>
         ))}
       </div>
     </div>
