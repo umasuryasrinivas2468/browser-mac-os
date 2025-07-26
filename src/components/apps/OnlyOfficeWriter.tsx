@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { FileText, Upload, Save, Download } from 'lucide-react';
+import { FileText, Upload, Save, AlertCircle } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -13,28 +13,50 @@ const OnlyOfficeWriter: React.FC = () => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiLoaded, setApiLoaded] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const docEditorRef = useRef<any>(null);
 
   useEffect(() => {
+    // Check if API is already loaded
+    if (window.DocsAPI) {
+      setApiLoaded(true);
+      return;
+    }
+
     // Load ONLYOFFICE API script
     if (!document.getElementById('onlyoffice-api')) {
       const script = document.createElement('script');
       script.id = 'onlyoffice-api';
       script.src = 'https://documentserver.onlyoffice.com/web-apps/apps/api/documents/api.js';
       script.onload = () => {
-        console.log('ONLYOFFICE API loaded');
+        console.log('ONLYOFFICE API loaded successfully');
+        setApiLoaded(true);
+        setError(null);
+      };
+      script.onerror = () => {
+        console.error('Failed to load ONLYOFFICE API');
+        setError('Failed to load ONLYOFFICE API. Please check your internet connection.');
       };
       document.head.appendChild(script);
     }
   }, []);
 
-  const initializeEditor = (fileName: string, fileData?: string) => {
-    if (!window.DocsAPI || !editorRef.current) return;
+  const initializeEditor = (fileName: string, isNew: boolean = false) => {
+    if (!window.DocsAPI || !editorRef.current) {
+      setError('ONLYOFFICE API not available');
+      setIsLoading(false);
+      return;
+    }
 
     // Destroy existing editor
     if (docEditorRef.current) {
-      docEditorRef.current.destroyEditor();
+      try {
+        docEditorRef.current.destroyEditor();
+      } catch (e) {
+        console.log('Editor destroy error (expected):', e);
+      }
     }
 
     const config = {
@@ -42,12 +64,13 @@ const OnlyOfficeWriter: React.FC = () => {
         fileType: 'docx',
         key: `${fileName}_${Date.now()}`,
         title: fileName,
-        url: fileData || '',
+        url: '', // Empty for new documents
         permissions: {
           edit: true,
           download: true,
           print: true,
-        },
+          review: true
+        }
       },
       documentType: 'text',
       editorConfig: {
@@ -55,77 +78,107 @@ const OnlyOfficeWriter: React.FC = () => {
         lang: 'en',
         user: {
           id: 'user1',
-          name: 'User',
+          name: 'User'
         },
         customization: {
-          autosave: true,
-          forcesave: true,
+          autosave: false,
+          forcesave: false,
           compactToolbar: true,
-          theme: {
-            id: isDarkMode ? 'theme-dark' : 'theme-classic-light',
-          },
-        },
+          toolbar: true,
+          statusBar: true
+        }
       },
       width: '100%',
       height: '100%',
       events: {
-        onDocumentReady: () => {
+        onAppReady: () => {
+          console.log('ONLYOFFICE Writer is ready');
           setIsLoading(false);
-          console.log('Document ready');
+          setError(null);
+        },
+        onDocumentReady: () => {
+          console.log('Document is ready');
+          setIsLoading(false);
+          setError(null);
         },
         onError: (error: any) => {
           console.error('ONLYOFFICE error:', error);
+          setError(`Editor error: ${error.message || 'Unknown error'}`);
           setIsLoading(false);
-        },
-      },
+        }
+      }
     };
 
-    docEditorRef.current = new window.DocsAPI.DocEditor(editorRef.current, config);
+    try {
+      docEditorRef.current = new window.DocsAPI.DocEditor(editorRef.current, config);
+    } catch (e) {
+      console.error('Failed to initialize editor:', e);
+      setError('Failed to initialize editor');
+      setIsLoading(false);
+    }
   };
 
   const handleNewDocument = () => {
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
     const fileName = `document_${Date.now()}.docx`;
     setCurrentFile(fileName);
-    
-    // Create empty document data
-    const emptyDocData = 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,';
     
     localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
       name: fileName,
       type: 'writer',
       created: new Date().toISOString(),
-      content: emptyDocData
+      content: ''
     }));
 
     setTimeout(() => {
-      initializeEditor(fileName, emptyDocData);
-    }, 1000);
+      initializeEditor(fileName, true);
+    }, 500);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && (file.name.endsWith('.docx') || file.name.endsWith('.doc'))) {
-      setIsLoading(true);
-      const fileName = file.name;
-      setCurrentFile(fileName);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const fileData = e.target?.result as string;
-        localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
-          name: fileName,
-          type: 'writer',
-          created: new Date().toISOString(),
-          content: fileData
-        }));
-        
-        setTimeout(() => {
-          initializeEditor(fileName, fileData);
-        }, 1000);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
     }
+
+    if (!file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
+      setError('Please upload a DOCX or DOC file');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    const fileName = file.name;
+    setCurrentFile(fileName);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const fileData = e.target?.result as string;
+      localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
+        name: fileName,
+        type: 'writer',
+        created: new Date().toISOString(),
+        content: fileData
+      }));
+      
+      setTimeout(() => {
+        initializeEditor(fileName);
+      }, 500);
+    };
+    reader.onerror = () => {
+      setError('Failed to read file');
+      setIsLoading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const getSavedFiles = () => {
@@ -147,11 +200,17 @@ const OnlyOfficeWriter: React.FC = () => {
   };
 
   const handleFileSelect = (file: any) => {
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
     setCurrentFile(file.name);
     setTimeout(() => {
-      initializeEditor(file.name, file.content);
-    }, 1000);
+      initializeEditor(file.name);
+    }, 500);
   };
 
   return (
@@ -162,8 +221,11 @@ const OnlyOfficeWriter: React.FC = () => {
       }`}>
         <button
           onClick={handleNewDocument}
+          disabled={!apiLoaded || isLoading}
           className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
-            isDarkMode 
+            (!apiLoaded || isLoading)
+              ? 'bg-gray-400 cursor-not-allowed'
+              : isDarkMode 
               ? 'bg-blue-600 hover:bg-blue-700 text-white' 
               : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
@@ -173,7 +235,9 @@ const OnlyOfficeWriter: React.FC = () => {
         </button>
         
         <label className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
-          isDarkMode 
+          (!apiLoaded || isLoading)
+            ? 'bg-gray-400 cursor-not-allowed'
+            : isDarkMode 
             ? 'bg-gray-700 hover:bg-gray-600 text-white' 
             : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
         }`}>
@@ -183,16 +247,24 @@ const OnlyOfficeWriter: React.FC = () => {
             type="file"
             accept=".docx,.doc"
             onChange={handleFileUpload}
+            disabled={!apiLoaded || isLoading}
             className="hidden"
           />
         </label>
 
         {currentFile && (
           <div className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${
-            isDarkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'
+            isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'
           }`}>
             <Save className="w-4 h-4" />
             <span className="text-sm">{currentFile}</span>
+          </div>
+        )}
+
+        {!apiLoaded && (
+          <div className="flex items-center space-x-1 px-3 py-1.5 text-sm text-yellow-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+            <span>Loading API...</span>
           </div>
         )}
       </div>
@@ -211,8 +283,11 @@ const OnlyOfficeWriter: React.FC = () => {
               <button
                 key={index}
                 onClick={() => handleFileSelect(file)}
+                disabled={!apiLoaded || isLoading}
                 className={`w-full flex items-center space-x-2 p-2 rounded-lg text-left transition-colors ${
-                  currentFile === file.name
+                  !apiLoaded || isLoading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : currentFile === file.name
                     ? 'bg-blue-500 text-white'
                     : isDarkMode
                     ? 'hover:bg-gray-700 text-gray-300'
@@ -228,9 +303,35 @@ const OnlyOfficeWriter: React.FC = () => {
 
         {/* ONLYOFFICE Editor */}
         <div className="flex-1 relative">
-          {isLoading ? (
+          {error ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center p-6">
+                <AlertCircle className={`w-12 h-12 mx-auto mb-4 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
+                <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Error
+                </h3>
+                <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {error}
+                </p>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    if (currentFile) {
+                      handleNewDocument();
+                    }
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Loading editor...</p>
+              </div>
             </div>
           ) : currentFile ? (
             <div ref={editorRef} className="w-full h-full" />
@@ -246,7 +347,12 @@ const OnlyOfficeWriter: React.FC = () => {
                 </p>
                 <button
                   onClick={handleNewDocument}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  disabled={!apiLoaded}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    !apiLoaded
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white`}
                 >
                   Create New Document
                 </button>
