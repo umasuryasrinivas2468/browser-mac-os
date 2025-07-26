@@ -57,13 +57,22 @@ const FileManager: React.FC = () => {
   const getCurrentFolder = () => {
     let current: any = fileStructure;
     for (const path of currentPath) {
-      current = current[path];
+      if (current && current[path]) {
+        current = current[path];
+      } else {
+        // If path doesn't exist, reset to Home and return Home's children
+        setCurrentPath(['Home']);
+        return fileStructure['Home'].children || {};
+      }
     }
-    return current.children || {};
+    return current?.children || {};
   };
 
   const navigateToFolder = (folderName: string) => {
-    setCurrentPath([...currentPath, folderName]);
+    const currentFolder = getCurrentFolder();
+    if (currentFolder[folderName] && currentFolder[folderName].type === 'folder') {
+      setCurrentPath([...currentPath, folderName]);
+    }
   };
 
   const navigateToPath = (index: number) => {
