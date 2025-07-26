@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
@@ -38,57 +39,92 @@ const Desktop: React.FC = () => {
     <>
       <style>{`
         * {
-          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>') 12 12, auto;
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 8 8, auto;
         }
         
         .desktop-cursor {
-          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="1.5"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>') 12 12, auto;
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 8 8, auto;
         }
         
-        .mountain-bg {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-          background-size: 400% 400%;
-          animation: gradient-shift 20s ease infinite;
+        .mountain-wallpaper {
+          background: linear-gradient(180deg, 
+            #87CEEB 0%,           /* Sky blue */
+            #98D8E8 15%,          /* Light sky */
+            #B8E6B8 25%,          /* Light green hills */
+            #90EE90 35%,          /* Light green */
+            #228B22 50%,          /* Forest green */
+            #006400 65%,          /* Dark green */
+            #2F4F2F 80%,          /* Dark slate gray */
+            #1C1C1C 100%          /* Dark base */
+          );
+          animation: mountain-breathe 15s ease-in-out infinite;
+        }
+        
+        .mountain-peaks {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 60%;
+          background: 
+            /* Mountain layers */
+            radial-gradient(ellipse at 20% 100%, rgba(139, 69, 19, 0.8) 0%, transparent 50%),
+            radial-gradient(ellipse at 40% 100%, rgba(160, 82, 45, 0.7) 0%, transparent 60%),
+            radial-gradient(ellipse at 60% 100%, rgba(105, 105, 105, 0.6) 0%, transparent 70%),
+            radial-gradient(ellipse at 80% 100%, rgba(119, 136, 153, 0.5) 0%, transparent 80%);
+          animation: mountain-drift 25s linear infinite;
         }
         
         .mountain-overlay {
-          background-image: 
-            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-          animation: mountain-float 25s ease-in-out infinite;
+          background: 
+            /* Mist and clouds */
+            radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+            /* Subtle light rays */
+            linear-gradient(135deg, rgba(255, 223, 186, 0.1) 0%, transparent 30%);
+          animation: cloud-float 20s ease-in-out infinite;
         }
         
-        @keyframes gradient-shift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        @keyframes mountain-breathe {
+          0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
+          50% { transform: scale(1.02); filter: hue-rotate(5deg); }
         }
         
-        @keyframes mountain-float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-10px) scale(1.02); }
+        @keyframes mountain-drift {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-20px); }
+        }
+        
+        @keyframes cloud-float {
+          0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.8; }
+          33% { transform: translateY(-5px) translateX(10px); opacity: 1; }
+          66% { transform: translateY(5px) translateX(-5px); opacity: 0.9; }
         }
         
         .glass-icon {
-          backdrop-filter: blur(12px);
-          background: rgba(255, 255, 255, 0.15);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+          backdrop-filter: blur(15px);
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 
+            0 8px 32px 0 rgba(31, 38, 135, 0.37),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
         
         .glass-icon:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-2px);
-          box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+          background: rgba(255, 255, 255, 0.3);
+          transform: translateY(-3px) scale(1.05);
+          box-shadow: 
+            0 15px 40px 0 rgba(31, 38, 135, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
       `}</style>
 
       <div 
-        className="fixed inset-0 overflow-hidden desktop-cursor mountain-bg"
+        className="fixed inset-0 overflow-hidden desktop-cursor mountain-wallpaper"
         onContextMenu={handleRightClick}
         onClick={handleClickOutside}
       >
+        <div className="absolute inset-0 mountain-peaks"></div>
         <div className="absolute inset-0 mountain-overlay"></div>
 
         <MenuBar />
@@ -96,25 +132,24 @@ const Desktop: React.FC = () => {
         {/* Desktop Icons */}
         <div className="absolute top-20 left-6 space-y-6 z-10">
           <div className="flex flex-col items-center space-y-2 group cursor-pointer">
-            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center transition-all duration-300">
               <Folder className="w-9 h-9 text-white drop-shadow-lg" />
             </div>
             <span className="text-white text-sm font-medium drop-shadow-lg">Documents</span>
           </div>
           
           <div className="flex flex-col items-center space-y-2 group cursor-pointer">
-            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center transition-all duration-300">
               <Trash2 className="w-9 h-9 text-white drop-shadow-lg" />
             </div>
             <span className="text-white text-sm font-medium drop-shadow-lg">Trash</span>
           </div>
 
-          {/* TextEdit App */}
           <div 
             className="flex flex-col items-center space-y-2 group cursor-pointer"
             onClick={handleTextEditorClick}
           >
-            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 relative">
+            <div className="w-16 h-16 glass-icon rounded-2xl flex items-center justify-center transition-all duration-300 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl"></div>
               <FileText className="w-9 h-9 text-white drop-shadow-lg relative z-10" />
             </div>
