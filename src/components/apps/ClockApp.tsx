@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Clock, Globe, Timer, Stopwatch } from 'lucide-react';
+import { Clock, Globe, Timer } from 'lucide-react';
 
 const ClockApp: React.FC = () => {
   const { isDarkMode } = useOS();

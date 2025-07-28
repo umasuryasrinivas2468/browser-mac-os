@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { FileText, Upload, Save, Download, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
@@ -268,7 +269,7 @@ const TextEditor: React.FC = () => {
                 fontSize: '14px', 
                 lineHeight: '1.6',
                 userSelect: 'none',
-                webkitUserSelect: 'none',
+                WebkitUserSelect: 'none',
                 mozUserSelect: 'none',
                 msUserSelect: 'none'
               }}
