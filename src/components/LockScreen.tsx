@@ -35,7 +35,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
     <div 
       className="fixed inset-0 flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url('https://i.ibb.co/KpTGFDg9/Whats-App-Image-2025-07-28-at-21-52-37-305242a5.jpg')`
+        backgroundImage: `url('https://i.ibb.co/bgQ3WMYv/image.png')`
       }}
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>

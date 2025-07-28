@@ -9,8 +9,8 @@ const MenuBar: React.FC = () => {
   return (
     <div className={`fixed top-0 left-0 right-0 h-8 z-40 flex items-center justify-between px-4 text-sm ${
       isDarkMode 
-        ? 'bg-black/80 backdrop-blur-md border-b border-white/10 text-white' 
-        : 'bg-white/80 backdrop-blur-md border-b border-black/10 text-black'
+        ? 'bg-black/40 backdrop-blur-xl text-white' 
+        : 'bg-white/40 backdrop-blur-xl text-black'
     }`}>
       {/* Left side - Aczen OS menu */}
       <div className="flex items-center space-x-4">

@@ -7,6 +7,7 @@ import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
 import AppLauncher from './AppLauncher';
+import DesktopSearchBar from './DesktopSearchBar';
 import { Calculator, Clock, Calendar } from 'lucide-react';
 import TextEditor from './apps/TextEditor';
 import CalculatorApp from './apps/Calculator';
@@ -100,6 +101,7 @@ const Desktop: React.FC = () => {
         <Dock />
         <SpotlightSearch />
         <AppLauncher />
+        <DesktopSearchBar />
 
         {/* Context Menu */}
         {contextMenu && (

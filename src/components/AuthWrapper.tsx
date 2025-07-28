@@ -10,10 +10,15 @@ const AuthWrapper: React.FC = () => {
         <Desktop />
       </SignedIn>
       <SignedOut>
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://i.ibb.co/bgQ3WMYv/image.png')`
+          }}
+        >
           <div className="text-center space-y-8">
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold text-white">Welcome to macOS Web</h1>
+              <h1 className="text-4xl font-bold text-white">Welcome to AczenOS Web</h1>
               <p className="text-white/80 text-lg">Please sign in to continue</p>
             </div>
             

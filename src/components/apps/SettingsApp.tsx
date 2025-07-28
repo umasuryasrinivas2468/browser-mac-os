@@ -88,7 +88,7 @@ const SettingsApp: React.FC = () => {
             <div className="flex items-center space-x-3">
               <Wifi className="w-5 h-5 text-green-600" />
               <div>
-                <div className="font-medium">MacOS-WiFi</div>
+                <div className="font-medium">Aczen-WiFi</div>
                 <div className="text-sm text-gray-500">Connected</div>
               </div>
             </div>

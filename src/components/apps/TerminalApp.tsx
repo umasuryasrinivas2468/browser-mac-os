@@ -5,7 +5,7 @@ import { useOS } from '@/contexts/OSContext';
 const TerminalApp: React.FC = () => {
   const { currentTime } = useOS();
   const [history, setHistory] = useState<string[]>([
-    'Welcome to MacOS Web Terminal v1.0',
+    'Welcome to Aczen Web Terminal v1.0',
     'Type "help" for available commands.',
     ''
   ]);
@@ -34,7 +34,7 @@ const TerminalApp: React.FC = () => {
       setHistory(['']);
       return [];
     },
-    whoami: () => ['john_doe'],
+    whoami: () => ['aczen_system91'],
     date: () => [new Date().toString()],
     pwd: () => ['/Users/john_doe'],
     ls: () => [
@@ -42,13 +42,13 @@ const TerminalApp: React.FC = () => {
       'Desktop      Applications Library     Public',
       ''
     ],
-    uname: () => ['MacOS Web Terminal (Darwin Kernel)'],
+    uname: () => ['Aczen Web Terminal (Darwin Kernel)'],
     uptime: () => [`up ${Math.floor(Math.random() * 24)}:${Math.floor(Math.random() * 60)} hours`],
     cat: (args: string[]) => {
       const filename = args[0] || 'unknown';
       const files: { [key: string]: string[] } = {
-        'readme.txt': ['This is a simulated file system.', 'Welcome to MacOS Web!'],
-        'version.txt': ['MacOS Web v1.0', 'Build 2024.01.01'],
+        'readme.txt': ['This is a simulated file system.', 'Welcome to Aczen Web!'],
+        'version.txt': ['Aczen Web v1.0', 'Build 2024.01.01'],
         'config.json': ['{ "theme": "dark", "user": "john_doe" }']
       };
       return files[filename] || [`cat: ${filename}: No such file or directory`];
@@ -130,7 +130,7 @@ const TerminalApp: React.FC = () => {
       </div>
       
       <div className="flex items-center">
-        <span className="text-blue-400">john_doe@macos-web</span>
+        <span className="text-blue-400">john_doe@aczen-web</span>
         <span className="text-white">:</span>
         <span className="text-purple-400">~</span>
         <span className="text-white">$ </span>

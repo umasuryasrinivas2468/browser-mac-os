@@ -6,10 +6,6 @@ import { Users } from 'lucide-react';
 const AczenCRMApp: React.FC = () => {
   const { isDarkMode } = useOS();
 
-  React.useEffect(() => {
-    window.location.href = 'https://crm.aczen.tech';
-  }, []);
-
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
@@ -21,16 +17,13 @@ const AczenCRMApp: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-        <div className="text-center">
-          <Users className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Redirecting to Aczen CRM
-          </h2>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Taking you to the customer relationship management platform...
-          </p>
-        </div>
+      <div className="flex-1">
+        <iframe
+          src="https://crm.aczen.tech"
+          className="w-full h-full border-none"
+          title="Aczen CRM"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+        />
       </div>
     </div>
   );
