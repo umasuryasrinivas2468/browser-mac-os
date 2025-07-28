@@ -9,7 +9,12 @@ import {
   Terminal,
   Calculator,
   Grid3X3,
-  X
+  X,
+  Clock,
+  Calendar,
+  Building2,
+  Users,
+  Code
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -18,6 +23,11 @@ import TerminalApp from '@/components/apps/TerminalApp';
 import WebBrowser from '@/components/apps/WebBrowser';
 import TextEditor from '@/components/apps/TextEditor';
 import CalculatorApp from '@/components/apps/Calculator';
+import ClockApp from '@/components/apps/ClockApp';
+import CalendarApp from '@/components/apps/CalendarApp';
+import AczenBilzApp from '@/components/apps/AczenBilzApp';
+import AczenCRMApp from '@/components/apps/AczenCRMApp';
+import AczenIDEApp from '@/components/apps/AczenIDEApp';
 
 const AppLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +68,41 @@ const AppLauncher: React.FC = () => {
       icon: Calculator,
       component: CalculatorApp,
       color: 'bg-orange-500'
+    },
+    {
+      id: 'clock',
+      title: 'Clock',
+      icon: Clock,
+      component: ClockApp,
+      color: 'bg-indigo-500'
+    },
+    {
+      id: 'calendar',
+      title: 'Calendar',
+      icon: Calendar,
+      component: CalendarApp,
+      color: 'bg-red-500'
+    },
+    {
+      id: 'aczen-bilz',
+      title: 'Aczen Bilz',
+      icon: Building2,
+      component: AczenBilzApp,
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'aczen-crm',
+      title: 'Aczen CRM',
+      icon: Users,
+      component: AczenCRMApp,
+      color: 'bg-green-500'
+    },
+    {
+      id: 'aczen-ide',
+      title: 'Aczen IDE',
+      icon: Code,
+      component: AczenIDEApp,
+      color: 'bg-purple-500'
     },
     {
       id: 'settings',

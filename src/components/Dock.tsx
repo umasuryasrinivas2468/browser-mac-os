@@ -10,7 +10,9 @@ import {
   Calculator,
   Clock,
   Calendar,
-  Building2
+  Building2,
+  Users,
+  Code
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -22,6 +24,8 @@ import CalculatorApp from '@/components/apps/Calculator';
 import ClockApp from '@/components/apps/ClockApp';
 import CalendarApp from '@/components/apps/CalendarApp';
 import AczenBilzApp from '@/components/apps/AczenBilzApp';
+import AczenCRMApp from '@/components/apps/AczenCRMApp';
+import AczenIDEApp from '@/components/apps/AczenIDEApp';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode, windows } = useOS();
@@ -63,10 +67,24 @@ const Dock: React.FC = () => {
       color: 'bg-red-500'
     },
     {
-      id: 'aczen',
+      id: 'aczen-bilz',
       title: 'Aczen Bilz',
       icon: Building2,
       component: AczenBilzApp,
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'aczen-crm',
+      title: 'Aczen CRM',
+      icon: Users,
+      component: AczenCRMApp,
+      color: 'bg-green-500'
+    },
+    {
+      id: 'aczen-ide',
+      title: 'Aczen IDE',
+      icon: Code,
+      component: AczenIDEApp,
       color: 'bg-purple-500'
     },
     {

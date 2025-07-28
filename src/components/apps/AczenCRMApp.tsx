@@ -1,34 +1,34 @@
 
 import React from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Building2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 
-const AczenBilzApp: React.FC = () => {
+const AczenCRMApp: React.FC = () => {
   const { isDarkMode } = useOS();
 
   React.useEffect(() => {
-    window.location.href = 'https://app.aczen.tech';
+    window.location.href = 'https://crm.aczen.tech';
   }, []);
 
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="flex items-center space-x-2">
-          <Building2 className="w-5 h-5 text-blue-500" />
+          <Users className="w-5 h-5 text-green-500" />
           <h1 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Aczen Bilz
+            Aczen CRM
           </h1>
         </div>
       </div>
 
       <div className="flex-1 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
-          <Building2 className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+          <Users className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Redirecting to Aczen Bilz
+            Redirecting to Aczen CRM
           </h2>
           <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Taking you to the main application platform...
+            Taking you to the customer relationship management platform...
           </p>
         </div>
       </div>
@@ -36,4 +36,4 @@ const AczenBilzApp: React.FC = () => {
   );
 };
 
-export default AczenBilzApp;
+export default AczenCRMApp;
