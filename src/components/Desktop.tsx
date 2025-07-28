@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { UserButton } from '@clerk/clerk-react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
 import Dock from './Dock';
@@ -79,6 +80,14 @@ const Desktop: React.FC = () => {
             0 12px 35px 0 rgba(31, 38, 135, 0.5),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
+        
+        .desktop-icons {
+          z-index: 1;
+        }
+        
+        .desktop-windows {
+          z-index: 10;
+        }
       `}</style>
 
       <div 
@@ -88,8 +97,13 @@ const Desktop: React.FC = () => {
       >
         <MenuBar />
         
-        {/* Desktop Icons - Fixed z-index */}
-        <div className="absolute top-20 left-20 space-y-4 z-10">
+        {/* User Button in top right */}
+        <div className="absolute top-4 right-4 z-50">
+          <UserButton afterSignOutUrl="/" />
+        </div>
+        
+        {/* Desktop Icons - Lower z-index */}
+        <div className="absolute top-20 left-20 space-y-4 desktop-icons">
           <div className="flex flex-col items-center space-y-1 group cursor-pointer">
             <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300">
               <Folder className="w-7 h-7 text-white drop-shadow-lg" />
@@ -128,9 +142,11 @@ const Desktop: React.FC = () => {
         </div>
 
         {/* Windows - Higher z-index */}
-        {windows.map((window) => (
-          <Window key={window.id} window={window} />
-        ))}
+        <div className="desktop-windows">
+          {windows.map((window) => (
+            <Window key={window.id} window={window} />
+          ))}
+        </div>
 
         <Dock />
         <SpotlightSearch />

@@ -13,8 +13,6 @@ export interface WindowState {
 }
 
 interface OSContextType {
-  isLocked: boolean;
-  setIsLocked: (locked: boolean) => void;
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
   windows: WindowState[];
@@ -39,7 +37,6 @@ export const useOS = () => {
 };
 
 export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isLocked, setIsLocked] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [currentTime, setCurrentTime] = useState('');
@@ -132,8 +129,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   return (
     <OSContext.Provider value={{
-      isLocked,
-      setIsLocked,
       isDarkMode,
       setIsDarkMode,
       windows,
