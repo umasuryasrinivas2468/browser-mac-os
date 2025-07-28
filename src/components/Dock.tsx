@@ -7,7 +7,10 @@ import {
   Folder, 
   Settings, 
   Terminal,
-  Calculator
+  Calculator,
+  Clock,
+  Calendar,
+  Building2
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -16,6 +19,9 @@ import TerminalApp from '@/components/apps/TerminalApp';
 import WebBrowser from '@/components/apps/WebBrowser';
 import TextEditor from '@/components/apps/TextEditor';
 import CalculatorApp from '@/components/apps/Calculator';
+import ClockApp from '@/components/apps/ClockApp';
+import CalendarApp from '@/components/apps/CalendarApp';
+import AczenBilzApp from '@/components/apps/AczenBilzApp';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode, windows } = useOS();
@@ -41,6 +47,27 @@ const Dock: React.FC = () => {
       icon: Calculator,
       component: CalculatorApp,
       color: 'bg-orange-500'
+    },
+    {
+      id: 'clock',
+      title: 'Clock',
+      icon: Clock,
+      component: ClockApp,
+      color: 'bg-indigo-500'
+    },
+    {
+      id: 'calendar',
+      title: 'Calendar',
+      icon: Calendar,
+      component: CalendarApp,
+      color: 'bg-red-500'
+    },
+    {
+      id: 'aczen',
+      title: 'Aczen Bilz',
+      icon: Building2,
+      component: AczenBilzApp,
+      color: 'bg-purple-500'
     },
     {
       id: 'files',
@@ -69,7 +96,7 @@ const Dock: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 left-4 z-30">
-      <div className={`flex items-center space-x-2 py-2 px-3 rounded-xl ${
+      <div className={`flex items-center space-x-1 py-1.5 px-2 rounded-lg ${
         isDarkMode 
           ? 'bg-black/40 backdrop-blur-xl border border-white/10' 
           : 'bg-white/40 backdrop-blur-xl border border-black/10'
@@ -79,16 +106,16 @@ const Dock: React.FC = () => {
             <button
               onClick={() => handleAppClick(app)}
               className={`
-                w-8 h-8 rounded-lg ${app.color} flex items-center justify-center 
+                w-6 h-6 rounded-md ${app.color} flex items-center justify-center 
                 transition-all duration-200 hover:scale-110 hover:-translate-y-1 
                 active:scale-95 shadow-md group relative
               `}
               title={app.title}
             >
-              <app.icon className="w-4 h-4 text-white" />
-              <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 
+              <app.icon className="w-3 h-3 text-white" />
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 
                             bg-black/75 text-white text-xs py-1 px-2 rounded 
-                            opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {app.title}
               </div>
             </button>

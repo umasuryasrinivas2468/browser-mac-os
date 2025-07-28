@@ -1,82 +1,69 @@
 
-import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
+import { Search, Command } from 'lucide-react';
 
 const SpotlightSearch: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [query, setQuery] = useState('');
   const { isDarkMode } = useOS();
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setIsVisible(false);
-      setQuery('');
-    } else if (e.key === 'Enter' && query.trim()) {
-      window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(query)}`, '_blank');
-      setIsVisible(false);
-      setQuery('');
-    }
-  };
-
-  React.useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === ' ') {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === ' ') {
         e.preventDefault();
-        setIsVisible(true);
+        setIsOpen(true);
+      }
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setSearchQuery('');
       }
     };
 
-    document.addEventListener('keydown', handleGlobalKeyDown);
-    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  if (!isVisible) {
-    return (
-      <button
-        onClick={() => setIsVisible(true)}
-        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20 
-                   px-2 py-1 rounded-full bg-gray-600/40 backdrop-blur-md 
-                   border border-gray-500/30 text-gray-300 text-xs
-                   hover:bg-gray-600/50 transition-all duration-200"
-      >
-        <Search className="w-2.5 h-2.5 inline mr-1" />
-        Search
-      </button>
-    );
-  }
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+      setIsOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div 
-        className={`w-80 ${
-          isDarkMode 
-            ? 'bg-gray-900/90 backdrop-blur-xl border border-gray-700' 
-            : 'bg-white/90 backdrop-blur-xl border border-gray-200'
-        } rounded-xl shadow-2xl overflow-hidden`}
-      >
-        <div className="p-3">
-          <div className="flex items-center space-x-2 mb-2">
-            <Search className={`w-3 h-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center pt-20">
+      <div className={`w-full max-w-lg mx-4 rounded-xl shadow-2xl border ${
+        isDarkMode 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <form onSubmit={handleSearch} className="p-4">
+          <div className="flex items-center space-x-3">
+            <Search className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             <input
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search with Perplexity"
-              className={`flex-1 bg-transparent outline-none text-sm ${
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search with Perplexity..."
+              className={`flex-1 bg-transparent border-none outline-none text-lg ${
                 isDarkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'
               }`}
               autoFocus
             />
-          </div>
-          
-          <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div className="flex items-center justify-between">
-              <span>Press Enter to search</span>
-              <span>⌘ + Space</span>
+            <div className="flex items-center space-x-1 text-xs text-gray-500">
+              <Command className="w-3 h-3" />
+              <span>Space</span>
             </div>
           </div>
+        </form>
+        
+        <div className={`px-4 pb-4 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          Press Enter to search with Perplexity AI
         </div>
       </div>
     </div>

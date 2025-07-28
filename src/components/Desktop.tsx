@@ -7,9 +7,12 @@ import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
 import AppLauncher from './AppLauncher';
-import { Folder, Trash2, FileText, Calculator } from 'lucide-react';
+import { Folder, Trash2, FileText, Calculator, Clock, Calendar, Building2 } from 'lucide-react';
 import TextEditor from './apps/TextEditor';
 import CalculatorApp from './apps/Calculator';
+import ClockApp from './apps/ClockApp';
+import CalendarApp from './apps/CalendarApp';
+import AczenBilzApp from './apps/AczenBilzApp';
 
 const Desktop: React.FC = () => {
   const { windows, isDarkMode, openWindow } = useOS();
@@ -30,20 +33,8 @@ const Desktop: React.FC = () => {
     { label: 'Empty Trash', icon: Trash2, action: () => console.log('Empty trash') }
   ];
 
-  const handleTextEditorClick = () => {
-    openWindow({
-      id: 'texteditor',
-      title: 'TextEdit',
-      component: TextEditor
-    });
-  };
-
-  const handleCalculatorClick = () => {
-    openWindow({
-      id: 'calculator',
-      title: 'Calculator',
-      component: CalculatorApp
-    });
+  const handleAppClick = (appData: { id: string; title: string; component: React.ComponentType<any> }) => {
+    openWindow(appData);
   };
 
   return (
@@ -120,7 +111,7 @@ const Desktop: React.FC = () => {
 
           <div 
             className="flex flex-col items-center space-y-1 group cursor-pointer"
-            onClick={handleTextEditorClick}
+            onClick={() => handleAppClick({ id: 'texteditor', title: 'TextEdit', component: TextEditor })}
           >
             <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl"></div>
@@ -131,13 +122,46 @@ const Desktop: React.FC = () => {
 
           <div 
             className="flex flex-col items-center space-y-1 group cursor-pointer"
-            onClick={handleCalculatorClick}
+            onClick={() => handleAppClick({ id: 'calculator', title: 'Calculator', component: CalculatorApp })}
           >
             <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300 relative">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl"></div>
               <Calculator className="w-7 h-7 text-white drop-shadow-lg relative z-10" />
             </div>
             <span className="text-white text-xs font-medium drop-shadow-lg">Calculator</span>
+          </div>
+
+          <div 
+            className="flex flex-col items-center space-y-1 group cursor-pointer"
+            onClick={() => handleAppClick({ id: 'clock', title: 'Clock', component: ClockApp })}
+          >
+            <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-indigo-600/20 rounded-xl"></div>
+              <Clock className="w-7 h-7 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-xs font-medium drop-shadow-lg">Clock</span>
+          </div>
+
+          <div 
+            className="flex flex-col items-center space-y-1 group cursor-pointer"
+            onClick={() => handleAppClick({ id: 'calendar', title: 'Calendar', component: CalendarApp })}
+          >
+            <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl"></div>
+              <Calendar className="w-7 h-7 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-xs font-medium drop-shadow-lg">Calendar</span>
+          </div>
+
+          <div 
+            className="flex flex-col items-center space-y-1 group cursor-pointer"
+            onClick={() => handleAppClick({ id: 'aczen', title: 'Aczen Bilz', component: AczenBilzApp })}
+          >
+            <div className="w-12 h-12 glass-icon rounded-xl flex items-center justify-center transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl"></div>
+              <Building2 className="w-7 h-7 text-white drop-shadow-lg relative z-10" />
+            </div>
+            <span className="text-white text-xs font-medium drop-shadow-lg">Aczen Bilz</span>
           </div>
         </div>
 

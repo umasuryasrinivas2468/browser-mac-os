@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { FileText, Upload, Save, Download, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
@@ -9,6 +8,7 @@ const TextEditor: React.FC = () => {
   const [content, setContent] = useState('');
   const [fileName, setFileName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const handleNewDocument = () => {
@@ -109,6 +109,23 @@ const TextEditor: React.FC = () => {
     editorRef.current?.focus();
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
+  const handleCopy = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    return false;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevent Ctrl+C, Ctrl+A, Ctrl+X
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'a' || e.key === 'x')) {
+      e.preventDefault();
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (editorRef.current && content) {
       editorRef.current.innerHTML = content;
@@ -118,69 +135,78 @@ const TextEditor: React.FC = () => {
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Toolbar */}
-      <div className={`flex items-center space-x-2 p-3 border-b ${
+      <div className={`flex items-center justify-between p-2 md:p-3 border-b ${
         isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
       }`}>
-        <button
-          onClick={handleNewDocument}
-          className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
+        <div className="flex items-center space-x-1 md:space-x-2 flex-wrap">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`md:hidden p-2 rounded-lg ${
+              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleNewDocument}
+            className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg transition-colors text-sm ${
+              isDarkMode 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">New</span>
+          </button>
+          
+          <label className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg cursor-pointer transition-colors text-sm ${
             isDarkMode 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span className="text-sm">New</span>
-        </button>
-        
-        <label className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
-          isDarkMode 
-            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-        }`}>
-          <Upload className="w-4 h-4" />
-          <span className="text-sm">Upload</span>
-          <input
-            type="file"
-            accept=".txt,.md"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-        </label>
+              ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          }`}>
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Upload</span>
+            <input
+              type="file"
+              accept=".txt,.md"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
 
-        {currentFile && (
-          <>
-            <button
-              onClick={handleSave}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              }`}
-            >
-              <Save className="w-4 h-4" />
-              <span className="text-sm">Save</span>
-            </button>
+          {currentFile && (
+            <>
+              <button
+                onClick={handleSave}
+                className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                  isDarkMode 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">Save</span>
+              </button>
 
-            <button
-              onClick={handleDownload}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                  : 'bg-purple-500 hover:bg-purple-600 text-white'
-              }`}
-            >
-              <Download className="w-4 h-4" />
-              <span className="text-sm">Download</span>
-            </button>
-          </>
-        )}
-
-        <div className="w-px h-6 bg-gray-300 mx-2" />
+              <button
+                onClick={handleDownload}
+                className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                  isDarkMode 
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                    : 'bg-purple-500 hover:bg-purple-600 text-white'
+                }`}
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Download</span>
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Formatting Tools */}
         {isEditing && (
-          <>
+          <div className="flex items-center space-x-1">
             <button onClick={() => formatText('bold')} className="p-1 rounded hover:bg-gray-200">
               <Bold className="w-4 h-4" />
             </button>
@@ -190,24 +216,6 @@ const TextEditor: React.FC = () => {
             <button onClick={() => formatText('underline')} className="p-1 rounded hover:bg-gray-200">
               <Underline className="w-4 h-4" />
             </button>
-            <button onClick={() => formatText('justifyLeft')} className="p-1 rounded hover:bg-gray-200">
-              <AlignLeft className="w-4 h-4" />
-            </button>
-            <button onClick={() => formatText('justifyCenter')} className="p-1 rounded hover:bg-gray-200">
-              <AlignCenter className="w-4 h-4" />
-            </button>
-            <button onClick={() => formatText('justifyRight')} className="p-1 rounded hover:bg-gray-200">
-              <AlignRight className="w-4 h-4" />
-            </button>
-          </>
-        )}
-
-        {currentFile && (
-          <div className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${
-            isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'
-          }`}>
-            <FileText className="w-4 h-4" />
-            <span className="text-sm">{fileName}</span>
           </div>
         )}
       </div>
@@ -215,7 +223,9 @@ const TextEditor: React.FC = () => {
       {/* Content Area */}
       <div className="flex-1 flex">
         {/* File Browser Sidebar */}
-        <div className={`w-64 border-r p-3 ${
+        <div className={`${isSidebarOpen ? 'w-full md:w-64' : 'w-0'} ${
+          isSidebarOpen ? 'block' : 'hidden'
+        } md:block border-r p-3 transition-all duration-300 ${
           isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
         }`}>
           <h3 className={`font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -247,16 +257,27 @@ const TextEditor: React.FC = () => {
             <div
               ref={editorRef}
               contentEditable
-              className={`w-full h-full p-6 outline-none ${
+              onContextMenu={handleContextMenu}
+              onCopy={handleCopy}
+              onKeyDown={handleKeyDown}
+              className={`w-full h-full p-4 md:p-6 outline-none resize-none select-none ${
                 isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
               }`}
-              style={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: '14px', lineHeight: '1.6' }}
+              style={{ 
+                fontFamily: 'Inter, system-ui, sans-serif', 
+                fontSize: '14px', 
+                lineHeight: '1.6',
+                userSelect: 'none',
+                webkitUserSelect: 'none',
+                mozUserSelect: 'none',
+                msUserSelect: 'none'
+              }}
               suppressContentEditableWarning={true}
             />
           ) : (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full p-4">
               <div className="text-center">
-                <FileText className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                <FileText className={`w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} />
                 <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Text Editor
                 </h3>
