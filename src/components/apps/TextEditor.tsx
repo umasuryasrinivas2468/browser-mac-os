@@ -270,7 +270,7 @@ const TextEditor: React.FC = () => {
                 lineHeight: '1.6',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
-                mozUserSelect: 'none',
+                MozUserSelect: 'none',
                 msUserSelect: 'none'
               }}
               suppressContentEditableWarning={true}
