@@ -70,16 +70,16 @@ const Window: React.FC<WindowProps> = ({ window }) => {
       }`}
       style={{
         left: window.isMaximized ? 0 : window.position.x,
-        top: window.isMaximized ? 0 : window.position.y,
+        top: window.isMaximized ? 32 : window.position.y,
         width: window.isMaximized ? '100vw' : window.size.width,
-        height: window.isMaximized ? '100vh' : window.size.height,
+        height: window.isMaximized ? 'calc(100vh - 32px)' : window.size.height,
         zIndex: window.zIndex,
       }}
       onMouseDown={() => focusWindow(window.id)}
     >
       {/* Window Header - Always visible with higher z-index */}
       <div
-        className={`window-header h-8 flex items-center justify-between px-4 relative z-50 ${
+        className={`window-header h-8 flex items-center justify-between px-4 relative z-[9999] ${
           window.isMaximized ? 'cursor-default' : 'cursor-move'
         } ${
           isDarkMode 
@@ -91,19 +91,19 @@ const Window: React.FC<WindowProps> = ({ window }) => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => closeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center group transition-all duration-200 z-50"
+            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
           >
             <X className="w-2 h-2 text-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
           <button
             onClick={() => minimizeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center group transition-all duration-200 z-50"
+            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
           >
             <Minus className="w-2 h-2 text-yellow-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
           <button
             onClick={() => maximizeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center group transition-all duration-200 z-50"
+            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
           >
             <Square className="w-1.5 h-1.5 text-green-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>

@@ -5,6 +5,7 @@ import MenuBar from './MenuBar';
 import Dock from './Dock';
 import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
+import AppLauncher from './AppLauncher';
 import { Folder, Trash2, FileText, Calculator } from 'lucide-react';
 import TextEditor from './apps/TextEditor';
 import CalculatorApp from './apps/Calculator';
@@ -56,7 +57,7 @@ const Desktop: React.FC = () => {
         }
         
         .custom-wallpaper {
-          background-image: url('https://i.ibb.co/WWG3x47/mountain-wallpaper.jpg');
+          background-image: url('https://i.ibb.co/bgQ3WMYv/image.png');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -133,6 +134,7 @@ const Desktop: React.FC = () => {
 
         <Dock />
         <SpotlightSearch />
+        <AppLauncher />
 
         {/* Context Menu */}
         {contextMenu && (
