@@ -35,13 +35,13 @@ const SpotlightSearch: React.FC = () => {
     return (
       <button
         onClick={() => setIsVisible(true)}
-        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-20 
-                   px-4 py-2 rounded-full bg-white/20 backdrop-blur-md 
-                   border border-white/30 text-white/70 text-sm
-                   hover:bg-white/30 transition-all duration-200"
+        className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-20 
+                   px-3 py-1.5 rounded-full bg-gray-500/30 backdrop-blur-md 
+                   border border-gray-400/30 text-gray-300 text-xs
+                   hover:bg-gray-500/40 transition-all duration-200"
       >
-        <Search className="w-4 h-4 inline mr-2" />
-        Search or enter website name
+        <Search className="w-3 h-3 inline mr-1" />
+        Search
       </button>
     );
   }
@@ -49,32 +49,32 @@ const SpotlightSearch: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div 
-        className={`w-[600px] ${
+        className={`w-[400px] ${
           isDarkMode 
             ? 'bg-gray-900/90 backdrop-blur-xl border border-gray-700' 
             : 'bg-white/90 backdrop-blur-xl border border-gray-200'
-        } rounded-2xl shadow-2xl overflow-hidden`}
+        } rounded-xl shadow-2xl overflow-hidden`}
       >
-        <div className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Search className={`w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+        <div className="p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <Search className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search the web or enter a website name"
-              className={`flex-1 bg-transparent outline-none text-lg ${
+              placeholder="Search the web"
+              className={`flex-1 bg-transparent outline-none ${
                 isDarkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'
               }`}
               autoFocus
             />
           </div>
           
-          <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             <div className="flex items-center justify-between">
-              <span>Press Enter to search on ChatGPT</span>
-              <span>⌘ + Space to open</span>
+              <span>Press Enter to search</span>
+              <span>⌘ + Space</span>
             </div>
           </div>
         </div>

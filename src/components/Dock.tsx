@@ -7,8 +7,7 @@ import {
   Folder, 
   Settings, 
   Terminal,
-  FileSpreadsheet,
-  Presentation
+  Calculator
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -16,6 +15,7 @@ import NotesApp from '@/components/apps/NotesApp';
 import TerminalApp from '@/components/apps/TerminalApp';
 import WebBrowser from '@/components/apps/WebBrowser';
 import TextEditor from '@/components/apps/TextEditor';
+import CalculatorApp from '@/components/apps/Calculator';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode, windows } = useOS();
@@ -50,6 +50,13 @@ const Dock: React.FC = () => {
       color: 'bg-blue-600'
     },
     {
+      id: 'calculator',
+      title: 'Calculator',
+      icon: Calculator,
+      component: CalculatorApp,
+      color: 'bg-orange-500'
+    },
+    {
       id: 'settings',
       title: 'Settings',
       icon: Settings,
@@ -82,8 +89,8 @@ const Dock: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-      <div className={`flex items-end space-x-2 px-4 py-3 rounded-2xl ${
+    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30">
+      <div className={`flex flex-col items-center space-y-2 py-3 px-2 rounded-xl ${
         isDarkMode 
           ? 'bg-black/40 backdrop-blur-xl border border-white/20' 
           : 'bg-white/40 backdrop-blur-xl border border-black/20'
@@ -93,23 +100,23 @@ const Dock: React.FC = () => {
             <button
               onClick={() => handleAppClick(app)}
               className={`
-                w-14 h-14 rounded-xl ${app.color} flex items-center justify-center 
-                transition-all duration-200 hover:scale-110 hover:-translate-y-1 
+                w-10 h-10 rounded-lg ${app.color} flex items-center justify-center 
+                transition-all duration-200 hover:scale-110 hover:-translate-x-1 
                 active:scale-95 shadow-lg group relative
               `}
               title={app.title}
             >
-              <app.icon className="w-6 h-6 text-white" />
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 
+              <app.icon className="w-5 h-5 text-white" />
+              <div className="absolute left-12 top-1/2 transform -translate-y-1/2 
                             bg-black/75 text-white text-xs py-1 px-2 rounded 
-                            opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
                 {app.title}
               </div>
             </button>
             
             {/* Indicator dot for open/minimized apps */}
             {isAppOpen(app.id) && (
-              <div className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
+              <div className={`absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-1 rounded-full ${
                 isAppMinimized(app.id) ? 'bg-orange-400' : 'bg-white'
               }`} />
             )}
