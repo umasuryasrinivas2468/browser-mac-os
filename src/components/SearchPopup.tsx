@@ -17,6 +17,25 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState('');
 
+  // Custom responses for Aczen queries
+  const getCustomResponse = (searchQuery: string): string | null => {
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    
+    if (lowerQuery === 'aczen os') {
+      return '**Aczen OS** is India\'s first AI-native web operating system, built entirely in the browser for seamless access across devices.\nIt integrates finance, CRM, documents, communication, and billing into one smart workspace for SMBs and students.\nWith built-in AI, users get smart assistance, voice navigation, and predictive actions tailored to their needs.\nDevelopers can build plug-in apps using low-code or scripts, creating a modular, extensible ecosystem.\nDesigned with privacy and Bharat-first values, Aczen OS empowers digital independence for the next billion users.';
+    }
+    
+    if (lowerQuery === 'aczen') {
+      return 'Aczen Technologies is a fintech-driven startup building India\'s digital backbone for small and medium businesses.\nFrom neobanking to billing, investments, and AI-powered tools, Aczen offers a unified financial platform.\nIt empowers SMBs to manage money smarter, reduce costs, and grow with confidence.\nAczen also supports students with skill-based scholarships and career-building tools.\nRooted in Bharat\'s spirit, Aczen is creating inclusive, tech-driven growth for India\'s next generation.';
+    }
+    
+    if (lowerQuery.includes('builders of aczen') || lowerQuery.includes('aczen team') || lowerQuery.includes('aczen founders')) {
+      return 'Aczen OS was envisioned and built by Uma Surya Srinivas, the youngest CEO of India and founder of Aczen Technologies, with his team: nuthan kalyan, karthik, hemanth, charitha, devanshi sahu, anie\nHe led a passionate team of engineers and designers focused on creating an AI-native, browser-based OS for Bharat.\nTogether, they built Aczen OS to empower SMBs, students, and developers with accessible, cloud-powered tools.';
+    }
+    
+    return null;
+  };
+
   // Debounce search to prevent excessive API calls
   const debounceSearch = useCallback(
     debounce((searchQuery: string) => {
@@ -40,6 +59,14 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     setHasSearched(true);
     setError('');
     
+    // Check for custom responses first
+    const customResponse = getCustomResponse(searchQuery);
+    if (customResponse) {
+      setResult(customResponse);
+      setIsLoading(false);
+      return;
+    }
+    
     // Create an AbortController for timeout handling
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -47,33 +74,24 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     try {
       console.log('Starting search for:', searchQuery);
       
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDXXwEWh4-4qAWV8123H2-uvADeC9Vaz_w`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer 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',
           'Content-Type': 'application/json',
         },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'Be precise and concise.'
-            },
-            {
-              role: 'user',
-              content: searchQuery
-            }
-          ],
-          temperature: 0.2,
-          top_p: 0.9,
-          max_tokens: 1000,
-          return_images: false,
-          return_related_questions: false,
-          search_recency_filter: 'month',
-          frequency_penalty: 1,
-          presence_penalty: 0
+          contents: [{
+            parts: [{
+              text: `Please provide a concise and accurate answer to this question: ${searchQuery}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.4,
+            topK: 32,
+            topP: 1,
+            maxOutputTokens: 1000,
+          }
         }),
       });
 
@@ -86,8 +104,8 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       const data = await response.json();
       console.log('API response received:', data);
       
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        setResult(data.choices[0].message.content);
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        setResult(data.candidates[0].content.parts[0].text);
         setError('');
       } else {
         throw new Error('Invalid response format from API');
