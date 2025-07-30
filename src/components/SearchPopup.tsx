@@ -47,24 +47,33 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     try {
       console.log('Starting search for:', searchQuery);
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDXXwEWh4-4qAWV8123H2-uvADeC9Vaz_w`, {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': 'Bearer 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',
           'Content-Type': 'application/json',
         },
         signal: controller.signal,
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Please provide a concise and accurate answer to this question: ${searchQuery}`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.4,
-            topK: 32,
-            topP: 1,
-            maxOutputTokens: 1024, // Reduced for faster response
-          }
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'Be precise and concise.'
+            },
+            {
+              role: 'user',
+              content: searchQuery
+            }
+          ],
+          temperature: 0.2,
+          top_p: 0.9,
+          max_tokens: 1000,
+          return_images: false,
+          return_related_questions: false,
+          search_recency_filter: 'month',
+          frequency_penalty: 1,
+          presence_penalty: 0
         }),
       });
 
@@ -77,8 +86,8 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       const data = await response.json();
       console.log('API response received:', data);
       
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        setResult(data.candidates[0].content.parts[0].text);
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        setResult(data.choices[0].message.content);
         setError('');
       } else {
         throw new Error('Invalid response format from API');
