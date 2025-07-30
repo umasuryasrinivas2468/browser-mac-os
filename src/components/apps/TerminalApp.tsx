@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import AczenSheetsApp from './AczenSheetsApp';
@@ -111,16 +112,26 @@ const TerminalApp: React.FC = () => {
     ],
     history: () => commandHistory.slice(-10).map((cmd, i) => `${commandHistory.length - 10 + i + 1}  ${cmd}`),
     neofetch: () => [
-      '<span style="color: #facc15;">                 .+ooooooooooo+.</span>',
-      '<span style="color: #facc15;">               .osssssssssssssso.</span>',
-      '<span style="color: #facc15;">             .+ssssssssssssssss+.</span>',
-      '<span style="color: #facc15;">            .osssssssssssssssssso.</span>',
-      '<span style="color: #facc15;">          .+ssssssssssssssssssss+.</span>',
-      '<span style="color: #facc15;">         .osssssssssssssssssssssso.</span>',
-      '<span style="color: #facc15;">       .+ssssssssssssssssssssssss+.</span>',
-      '<span style="color: #facc15;">      .osssssssssssssssssssssssssso.</span>',
-      '<span style="color: #facc15;">    .+ssssssssssssssssssssssssssss+.</span>',
-      '<span style="color: #facc15;">.+oooooooooooooooooooooooooooooooo+.</span>',
+      '<span style="color: #3b82f6;">       ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</span>',
+      '<span style="color: #3b82f6;">     ██                         ██</span>',
+      '<span style="color: #3b82f6;">   ██                             ██</span>',
+      '<span style="color: #3b82f6;">  ██          ▄▄▄▄▄▄▄▄▄▄▄▄         ██</span>',
+      '<span style="color: #3b82f6;"> ██         ██████████████         ██</span>',
+      '<span style="color: #3b82f6;">██    ████  ██████████████  ████    ██</span>',
+      '<span style="color: #3b82f6;">██   ██████████████████████████     ██</span>',
+      '<span style="color: #3b82f6;">██  ████████████████████████████    ██</span>',
+      '<span style="color: #3b82f6;">██ ██████████████  ████████████     ██</span>',
+      '<span style="color: #3b82f6;">██ █████████████    █████████████   ██</span>',
+      '<span style="color: #3b82f6;">██ ████████████      ████████████   ██</span>',
+      '<span style="color: #3b82f6;">██  ██████████        ███████████   ██</span>',
+      '<span style="color: #3b82f6;"> ██  █████████        ██████████   ██</span>',
+      '<span style="color: #3b82f6;">  ██   ██████          ███████    ██</span>',
+      '<span style="color: #3b82f6;">   ██    ████          █████     ██</span>',
+      '<span style="color: #3b82f6;">     ██                        ██</span>',
+      '<span style="color: #3b82f6;">       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀</span>',
+      '',
+      '<span style="color: #22d3ee; font-weight: bold; font-size: 1.2em;">         A C Z E N</span>',
+      '<span style="color: #6b7280;">         ─────────</span>',
       '',
       '<span style="color: #3b82f6; font-weight: bold;">user@aczen-web</span>',
       '<span style="color: #6b7280;">─────────────────────</span>',
@@ -164,7 +175,11 @@ const TerminalApp: React.FC = () => {
     },
     // Custom Aczen commands
     aczen: () => {
-      return ['<span style="color: #3b82f6; font-weight: bold;">aczen</span> <span style="color: #3b82f6;">#WebOS #Innovation #Future</span>', ''];
+      return [
+        '<span style="color: #22d3ee; font-weight: bold; font-size: 1.5em;">A C Z E N</span>',
+        '<span style="color: #3b82f6;">#WebOS #Innovation #Future</span>', 
+        ''
+      ];
     },
     gst: () => {
       openWindow({
@@ -273,14 +288,12 @@ const TerminalApp: React.FC = () => {
     >
       <div className="whitespace-pre-wrap break-words">
         {history.map((line, index) => (
-          <div 
-            key={index} 
-            className="leading-relaxed"
-            dangerouslySetInnerHTML={
-              line.includes('<span') ? { __html: line } : undefined
-            }
-          >
-            {!line.includes('<span') && line}
+          <div key={index} className="leading-relaxed">
+            {line.includes('<span') ? (
+              <div dangerouslySetInnerHTML={{ __html: line }} />
+            ) : (
+              line
+            )}
           </div>
         ))}
       </div>
