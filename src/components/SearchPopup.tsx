@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { X, Search, Bot, Loader2 } from 'lucide-react';
+import { X, Search, Bot, Loader2, AlertCircle } from 'lucide-react';
 
 interface SearchPopupProps {
   isOpen: boolean;
@@ -15,6 +15,17 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState('');
+
+  // Debounce search to prevent excessive API calls
+  const debounceSearch = useCallback(
+    debounce((searchQuery: string) => {
+      if (searchQuery.trim()) {
+        handleSearch(searchQuery);
+      }
+    }, 1000),
+    []
+  );
 
   useEffect(() => {
     if (initialQuery && isOpen && !hasSearched) {
@@ -27,38 +38,65 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
 
     setIsLoading(true);
     setHasSearched(true);
+    setError('');
+    
+    // Create an AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
     
     try {
+      console.log('Starting search for:', searchQuery);
+      
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDXXwEWh4-4qAWV8123H2-uvADeC9Vaz_w`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Please provide a comprehensive and accurate answer to this question: ${searchQuery}`
+              text: `Please provide a concise and accurate answer to this question: ${searchQuery}`
             }]
           }],
           generationConfig: {
             temperature: 0.4,
             topK: 32,
             topP: 1,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 1024, // Reduced for faster response
           }
         }),
       });
 
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('API response received:', data);
       
       if (data.candidates && data.candidates[0] && data.candidates[0].content) {
         setResult(data.candidates[0].content.parts[0].text);
+        setError('');
       } else {
-        setResult('Sorry, I couldn\'t generate a response. Please try again.');
+        throw new Error('Invalid response format from API');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
-      setResult('Sorry, there was an error processing your request. Please try again.');
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        setError('Request timed out. Please try again with a shorter query.');
+      } else if (error.message.includes('429')) {
+        setError('Too many requests. Please wait a moment and try again.');
+      } else if (error.message.includes('quota')) {
+        setError('API quota exceeded. Please try again later.');
+      } else {
+        setError('Sorry, there was an error processing your request. Please try again.');
+      }
+      setResult('');
     } finally {
       setIsLoading(false);
     }
@@ -66,15 +104,31 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSearch();
+    if (!isLoading && query.trim()) {
+      handleSearch();
+    }
   };
 
   const handleClose = () => {
     setQuery('');
     setResult('');
     setHasSearched(false);
+    setError('');
     onClose();
   };
+
+  // Debounce utility function
+  function debounce(func: Function, wait: number) {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   if (!isOpen) return null;
 
@@ -151,6 +205,19 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
               <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Searching...
               </span>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <AlertCircle className="w-12 h-12 text-red-500 mb-3" />
+              <p className={`text-center ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                {error}
+              </p>
+              <button
+                onClick={() => handleSearch()}
+                className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Try Again
+              </button>
             </div>
           ) : result ? (
             <div className={`prose max-w-none ${isDarkMode ? 'prose-invert' : ''}`}>
