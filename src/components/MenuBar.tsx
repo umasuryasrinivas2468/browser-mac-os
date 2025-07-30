@@ -1,17 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Wifi, Battery, Bluetooth, Volume2, Settings, Bell } from 'lucide-react';
+import { Shield, Dock as DockIcon, Grid3X3 } from 'lucide-react';
 
-const MenuBar: React.FC = () => {
-  const { currentTime, isDarkMode } = useOS();
+interface MenuBarProps {
+  onSecurityClick: () => void;
+  onPopularAppsClick: () => void;
+}
+
+const MenuBar: React.FC<MenuBarProps> = ({ onSecurityClick, onPopularAppsClick }) => {
+  const { currentTime, isDarkMode, isDockVisible, setIsDockVisible } = useOS();
 
   return (
-    <div className={`fixed top-0 left-0 right-0 h-8 z-40 flex items-center justify-between px-4 text-sm ${
-      isDarkMode 
-        ? 'bg-black/40 backdrop-blur-xl text-white' 
-        : 'bg-white/40 backdrop-blur-xl text-black'
-    }`}>
+    <div className="fixed top-0 left-0 right-0 h-8 z-40 flex items-center justify-between px-4 text-sm bg-black text-white">
       {/* Left side - Aczen OS menu */}
       <div className="flex items-center space-x-4">
         <div className="w-5 h-5 flex items-center justify-center">
@@ -22,39 +23,38 @@ const MenuBar: React.FC = () => {
         <span className="font-semibold">Aczen OS</span>
       </div>
 
-      {/* Right side - Status items */}
-      <div className="flex items-center space-x-3">
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Bluetooth className="w-4 h-4 text-blue-500" />
-        </button>
-        
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Wifi className="w-4 h-4" />
-        </button>
-        
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Volume2 className="w-4 h-4" />
-        </button>
-        
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Battery className="w-4 h-4" />
-          <span className="text-xs">100%</span>
+      {/* Right side - Control buttons and time */}
+      <div className="flex items-center space-x-1">
+        {/* Popular Apps Button */}
+        <button
+          onClick={onPopularAppsClick}
+          className="flex items-center justify-center w-5 h-5 hover:bg-white/20 rounded transition-colors"
+          title="Popular Apps"
+        >
+          <Grid3X3 className="w-3 h-3 text-white" />
         </button>
 
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Bell className="w-4 h-4" />
+        {/* Dock Toggle Button */}
+        <button
+          onClick={() => setIsDockVisible(!isDockVisible)}
+          className="flex items-center justify-center w-5 h-5 hover:bg-white/20 rounded transition-colors"
+          title={isDockVisible ? 'Hide Dock' : 'Show Dock'}
+        >
+          <DockIcon className={`w-3 h-3 ${isDockVisible ? 'text-blue-400' : 'text-gray-400'}`} />
         </button>
 
-        <button className="flex items-center space-x-1 hover:bg-white/10 p-1 rounded transition-colors">
-          <Settings className="w-4 h-4" />
+        {/* Security Button */}
+        <button
+          onClick={onSecurityClick}
+          className="flex items-center justify-center w-5 h-5 hover:bg-white/20 rounded transition-colors"
+          title="Security Center"
+        >
+          <Shield className="w-3 h-3 text-blue-400" />
         </button>
 
-        <div className="flex items-center space-x-2 px-2">
-          <span className="font-mono">{currentTime}</span>
-        </div>
-
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
-          <span className="text-white text-xs font-bold">U</span>
+        {/* Time */}
+        <div className="flex items-center px-3">
+          <span className="font-mono text-xs">{currentTime}</span>
         </div>
       </div>
     </div>

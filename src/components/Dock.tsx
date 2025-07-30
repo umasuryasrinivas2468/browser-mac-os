@@ -12,7 +12,8 @@ import {
   Calendar,
   Building2,
   Users,
-  Code
+  Code,
+  FileSpreadsheet
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -26,14 +27,15 @@ import CalendarApp from '@/components/apps/CalendarApp';
 import AczenBilzApp from '@/components/apps/AczenBilzApp';
 import AczenCRMApp from '@/components/apps/AczenCRMApp';
 import AczenIDEApp from '@/components/apps/AczenIDEApp';
+import AczenSheetsApp from '@/components/apps/AczenSheetsApp';
 
 const Dock: React.FC = () => {
-  const { openWindow, isDarkMode, windows } = useOS();
+  const { openWindow, isDarkMode, windows, isDockVisible } = useOS();
 
   const dockApps = [
     {
       id: 'browser',
-      title: 'Safari',
+      title: 'Web Browser',
       icon: Globe,
       component: WebBrowser,
       color: 'bg-blue-500'
@@ -65,6 +67,13 @@ const Dock: React.FC = () => {
       icon: Calendar,
       component: CalendarApp,
       color: 'bg-red-500'
+    },
+    {
+      id: 'aczen-sheets',
+      title: 'Aczen Sheets',
+      icon: FileSpreadsheet,
+      component: AczenSheetsApp,
+      color: 'bg-green-600'
     },
     {
       id: 'aczen-bilz',
@@ -113,8 +122,10 @@ const Dock: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-30">
-      <div className={`flex items-center space-x-2 py-2 px-3 rounded-lg ${
+    <div className={`fixed bottom-4 left-4 z-30 transition-all duration-300 ${
+      isDockVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+    }`}>
+      <div className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-all duration-300 ${
         isDarkMode 
           ? 'bg-black/40 backdrop-blur-xl border border-white/10' 
           : 'bg-white/40 backdrop-blur-xl border border-black/10'

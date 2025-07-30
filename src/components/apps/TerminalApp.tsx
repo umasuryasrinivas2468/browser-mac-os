@@ -1,12 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
+import AczenSheetsApp from './AczenSheetsApp';
+import AczenIDEApp from './AczenIDEApp';
+import SettingsApp from './SettingsApp';
 
 const TerminalApp: React.FC = () => {
-  const { currentTime } = useOS();
+  const { currentTime, openWindow } = useOS();
   const [history, setHistory] = useState<string[]>([
-    'Welcome to Aczen Web Terminal v1.0',
+    'Welcome to Aczen Web Terminal v2.1.0',
     'Type "help" for available commands.',
+    'Try "aczen", "gst", "codex", "control", or "time" for Aczen features.',
     ''
   ]);
   const [currentCommand, setCurrentCommand] = useState('');
@@ -18,40 +22,176 @@ const TerminalApp: React.FC = () => {
   const commands = {
     help: () => [
       'Available commands:',
-      '  help       - Show this help message',
-      '  clear      - Clear the terminal',
-      '  whoami     - Show current user',
-      '  date       - Show current date and time',
-      '  pwd        - Show current directory',
-      '  ls         - List directory contents',
-      '  echo <msg> - Echo a message',
-      '  uname      - Show system information',
-      '  uptime     - Show system uptime',
-      '  cat <file> - Display file contents (simulated)',
+      '  help         - Show this help message',
+      '  clear        - Clear the terminal',
+      '  whoami       - Show current user',
+      '  date         - Show current date and time',
+      '  pwd          - Show current directory',
+      '  ls [dir]     - List directory contents',
+      '  echo <msg>   - Echo a message',
+      '  uname        - Show system information',
+      '  uptime       - Show system uptime',
+      '  cat <file>   - Display file contents (simulated)',
+      '  mkdir <dir>  - Create directory (simulated)',
+      '  touch <file> - Create file (simulated)',
+      '  rm <file>    - Remove file (simulated)',
+      '  ps           - Show running processes',
+      '  top          - Show system resources',
+      '  history      - Show command history',
+      '  neofetch     - Show system info with ASCII art',
+      '  weather      - Show weather information',
+      '  joke         - Tell a random joke',
+      '',
+      'Aczen Commands:',
+      '  aczen        - Display Aczen branding',
+      '  gst          - Open Aczen Sheets',
+      '  codex        - Open Aczen IDE',
+      '  control      - Open Settings',
+      '  time         - Show current time and date',
       ''
     ],
     clear: () => {
       setHistory(['']);
       return [];
     },
-    whoami: () => ['aczen_system91'],
+    whoami: () => ['user'],
     date: () => [new Date().toString()],
-    pwd: () => ['/Users/john_doe'],
-    ls: () => [
-      'Documents    Downloads    Pictures    Music    Videos',
-      'Desktop      Applications Library     Public',
-      ''
-    ],
-    uname: () => ['Aczen Web Terminal (Darwin Kernel)'],
-    uptime: () => [`up ${Math.floor(Math.random() * 24)}:${Math.floor(Math.random() * 60)} hours`],
+    pwd: () => ['/Users/user'],
+    ls: (args: string[]) => {
+      const dir = args[0] || '';
+      if (dir === 'Documents') {
+        return ['report.pdf    notes.txt    presentation.pptx', ''];
+      } else if (dir === 'Downloads') {
+        return ['installer.dmg    image.jpg    archive.zip', ''];
+      }
+      return [
+        'Documents    Downloads    Pictures    Music    Videos',
+        'Desktop      Applications Library     Public',
+        ''
+      ];
+    },
+    uname: () => ['Aczen Web Terminal (Darwin Kernel Version 23.1.0)'],
+    uptime: () => [`up ${Math.floor(Math.random() * 24)}:${Math.floor(Math.random() * 60)} hours, load average: 1.2, 1.5, 1.8`],
     cat: (args: string[]) => {
       const filename = args[0] || 'unknown';
       const files: { [key: string]: string[] } = {
-        'readme.txt': ['This is a simulated file system.', 'Welcome to Aczen Web!'],
-        'version.txt': ['Aczen Web v1.0', 'Build 2024.01.01'],
-        'config.json': ['{ "theme": "dark", "user": "john_doe" }']
+        'readme.txt': ['This is a simulated file system.', 'Welcome to Aczen Web!', 'Version 2.1.0'],
+        'version.txt': ['Aczen Web v2.1.0', 'Build 2024.01.15', 'Release: Stable'],
+        'config.json': ['{ "theme": "dark", "user": "user", "version": "2.1.0" }'],
+        'notes.txt': ['Meeting notes:', '- Implement new features', '- Fix responsive design', '- Update documentation']
       };
       return files[filename] || [`cat: ${filename}: No such file or directory`];
+    },
+    mkdir: (args: string[]) => {
+      const dirname = args[0] || 'unknown';
+      return [`mkdir: created directory '${dirname}'`];
+    },
+    touch: (args: string[]) => {
+      const filename = args[0] || 'unknown';
+      return [`touch: created file '${filename}'`];
+    },
+    rm: (args: string[]) => {
+      const filename = args[0] || 'unknown';
+      return [`rm: removed '${filename}'`];
+    },
+    ps: () => [
+      'PID   COMMAND',
+      '1     systemd',
+      '123   aczen-web',
+      '456   terminal',
+      '789   browser',
+      ''
+    ],
+    top: () => [
+      'System Resources:',
+      'CPU Usage: 15.2%',
+      'Memory: 8.2GB / 16GB (51%)',
+      'Disk: 256GB / 512GB (50%)',
+      'Network: ↓ 1.2MB/s ↑ 0.8MB/s',
+      ''
+    ],
+    history: () => commandHistory.slice(-10).map((cmd, i) => `${commandHistory.length - 10 + i + 1}  ${cmd}`),
+    neofetch: () => [
+      '                    ████████',
+      '                ████████████████',
+      '              ██████████████████',
+      '            ████████████████████',
+      '          ██████████████████████',
+      '        ████████████████████████',
+      '      ██████████████████████████',
+      '    ████████████████████████████',
+      '  ██████████████████████████████',
+      '████████████████████████████████',
+      '',
+      'user@aczen-web',
+      '─────────────────────',
+      'OS: Aczen Web v2.1.0',
+      'Kernel: Darwin 23.1.0',
+      'Shell: aczen-terminal',
+      'CPU: Intel Core i7-12700K',
+      'Memory: 8192MB / 16384MB',
+      'Disk: 256GB / 512GB',
+      ''
+    ],
+    weather: () => [
+      '🌤️  Weather in San Francisco',
+      '─────────────────────────────',
+      'Temperature: 22°C (72°F)',
+      'Condition: Partly Cloudy',
+      'Humidity: 65%',
+      'Wind: 8 km/h NW',
+      ''
+    ],
+    joke: () => {
+      const jokes = [
+        'Why do programmers prefer dark mode? Because light attracts bugs! 🐛',
+        'How many programmers does it take to change a light bulb? None, that\'s a hardware problem! 💡',
+        'Why do Java developers wear glasses? Because they can\'t C# ! 👓',
+        'What\'s a programmer\'s favorite hangout place? Foo Bar! 🍺',
+        'Why did the programmer quit his job? He didn\'t get arrays! 📊'
+      ];
+      return [jokes[Math.floor(Math.random() * jokes.length)], ''];
+    },
+    // Custom Aczen commands
+    aczen: () => {
+      return ['<span style="color: #3b82f6; font-weight: bold;">aczen</span> <span style="color: #3b82f6;">#WebOS #Innovation #Future</span>', ''];
+    },
+    gst: () => {
+      openWindow({
+        id: 'aczen-sheets',
+        title: 'Aczen Sheets',
+        component: AczenSheetsApp
+      });
+      return ['Opening Aczen Sheets...', ''];
+    },
+    codex: () => {
+      openWindow({
+        id: 'aczen-ide',
+        title: 'Aczen IDE',
+        component: AczenIDEApp
+      });
+      return ['Opening Aczen IDE...', ''];
+    },
+    control: () => {
+      openWindow({
+        id: 'settings',
+        title: 'Settings',
+        component: SettingsApp
+      });
+      return ['Opening Settings...', ''];
+    },
+    time: () => {
+      const now = new Date();
+      return [
+        `Current Time: ${now.toLocaleTimeString()}`,
+        `Current Date: ${now.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}`,
+        ''
+      ];
     }
   };
 
@@ -117,31 +257,40 @@ const TerminalApp: React.FC = () => {
 
   return (
     <div 
-      className="h-full bg-black text-green-400 font-mono text-sm p-4 overflow-auto"
+      className="h-full bg-black text-green-400 font-mono text-xs sm:text-sm p-2 sm:p-4 overflow-auto"
       onClick={() => inputRef.current?.focus()}
       ref={terminalRef}
     >
-      <div className="whitespace-pre-wrap">
+      <div className="whitespace-pre-wrap break-words">
         {history.map((line, index) => (
-          <div key={index}>
-            {line}
+          <div 
+            key={index} 
+            className="leading-relaxed"
+            dangerouslySetInnerHTML={
+              line.includes('<span') ? { __html: line } : undefined
+            }
+          >
+            {!line.includes('<span') && line}
           </div>
         ))}
       </div>
       
-      <div className="flex items-center">
-        <span className="text-blue-400">john_doe@aczen-web</span>
-        <span className="text-white">:</span>
-        <span className="text-purple-400">~</span>
-        <span className="text-white">$ </span>
+      <div className="flex items-center flex-wrap sm:flex-nowrap">
+        <div className="flex items-center flex-shrink-0">
+          <span className="text-blue-400 text-xs sm:text-sm">user@aczen-web</span>
+          <span className="text-white">:</span>
+          <span className="text-purple-400">~</span>
+          <span className="text-white">$ </span>
+        </div>
         <input
           ref={inputRef}
           type="text"
           value={currentCommand}
           onChange={(e) => setCurrentCommand(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 bg-transparent outline-none text-green-400 ml-1"
+          className="flex-1 bg-transparent outline-none text-green-400 ml-1 min-w-0 text-xs sm:text-sm"
           spellCheck={false}
+          placeholder="Type a command..."
         />
       </div>
     </div>

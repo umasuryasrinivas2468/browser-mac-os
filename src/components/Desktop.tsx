@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserButton } from '@clerk/clerk-react';
+import { useUser } from '@clerk/clerk-react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
 import Dock from './Dock';
@@ -8,15 +8,22 @@ import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
 import AppLauncher from './AppLauncher';
 import DesktopSearchBar from './DesktopSearchBar';
-import { Calculator, Clock, Calendar } from 'lucide-react';
+import CopyProtection from './CopyProtection';
+import ClerkPopup from './ClerkPopup';
+import PopupApps from './PopupApps';
+import { Calculator, Clock, Calendar, Shield, FileSpreadsheet } from 'lucide-react';
 import TextEditor from './apps/TextEditor';
 import CalculatorApp from './apps/Calculator';
 import ClockApp from './apps/ClockApp';
 import CalendarApp from './apps/CalendarApp';
+import AczenSheetsApp from './apps/AczenSheetsApp';
 
 const Desktop: React.FC = () => {
   const { windows, isDarkMode, openWindow } = useOS();
+  const { isSignedIn } = useUser();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [showClerkPopup, setShowClerkPopup] = useState(false);
+  const [clerkMode, setClerkMode] = useState<'signin' | 'signup' | 'profile' | 'settings'>('signin');
 
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,8 +34,21 @@ const Desktop: React.FC = () => {
     setContextMenu(null);
   };
 
+  const handleUserButtonClick = () => {
+    if (isSignedIn) {
+      setClerkMode('profile');
+    } else {
+      setClerkMode('signin');
+    }
+    setShowClerkPopup(true);
+  };
+
   const contextMenuItems = [
-    { label: 'Refresh', icon: null, action: () => window.location.reload() }
+    { label: 'Refresh', icon: null, action: () => window.location.reload() },
+    { label: 'Security Center', icon: Shield, action: () => {
+      setClerkMode(isSignedIn ? 'settings' : 'signin');
+      setShowClerkPopup(true);
+    }}
   ];
 
   const handleAppClick = (appData: { id: string; title: string; component: React.ComponentType<any> }) => {
@@ -37,6 +57,8 @@ const Desktop: React.FC = () => {
 
   return (
     <>
+      <CopyProtection />
+      
       <style>{`
         * {
           cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 8 8, auto;
@@ -80,16 +102,19 @@ const Desktop: React.FC = () => {
       `}</style>
 
       <div 
-        className="fixed inset-0 overflow-hidden desktop-cursor custom-wallpaper"
+        className="fixed inset-0 overflow-hidden desktop-cursor custom-wallpaper no-copy"
         onContextMenu={handleRightClick}
         onClick={handleClickOutside}
       >
-        <MenuBar />
+        <MenuBar 
+          onSecurityClick={handleUserButtonClick}
+          onPopularAppsClick={() => {
+            // This will be handled by PopupApps component through a custom event
+            window.dispatchEvent(new CustomEvent('togglePopularApps'));
+          }}
+        />
         
-        {/* User Button in top right */}
-        <div className="absolute top-4 right-4 z-50">
-          <UserButton afterSignOutUrl="/" />
-        </div>
+
         
         {/* Windows - Higher z-index */}
         <div className="desktop-windows">
@@ -102,6 +127,7 @@ const Desktop: React.FC = () => {
         <SpotlightSearch />
         <AppLauncher />
         <DesktopSearchBar />
+        <PopupApps />
 
         {/* Context Menu */}
         {contextMenu && (
@@ -132,6 +158,13 @@ const Desktop: React.FC = () => {
             ))}
           </div>
         )}
+
+        {/* Clerk Security Popup */}
+        <ClerkPopup
+          isOpen={showClerkPopup}
+          onClose={() => setShowClerkPopup(false)}
+          mode={clerkMode}
+        />
       </div>
     </>
   );

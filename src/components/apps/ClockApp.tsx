@@ -1,12 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Clock, Globe, Timer } from 'lucide-react';
+import { Clock, Globe, Timer, Maximize2, Minimize2 } from 'lucide-react';
 
-const ClockApp: React.FC = () => {
+interface ClockAppProps {
+  isPopupView?: boolean;
+  onTogglePopup?: () => void;
+}
+
+const ClockApp: React.FC<ClockAppProps> = ({ 
+  isPopupView = false, 
+  onTogglePopup 
+}) => {
   const { isDarkMode } = useOS();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedTimezone, setSelectedTimezone] = useState('local');
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -36,16 +45,83 @@ const ClockApp: React.FC = () => {
 
   const displayTime = getTimeForTimezone(selectedTimezone);
 
-  return (
-    <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-        <div className="flex items-center space-x-2">
-          <Clock className="w-5 h-5 text-blue-500" />
-          <h1 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Clock
-          </h1>
+  const togglePopup = () => {
+    setShowPopup(!showPopup);
+    if (onTogglePopup) {
+      onTogglePopup();
+    }
+  };
+
+  const PopupClock = () => (
+    <div className="fixed top-4 left-4 z-50">
+      <div className={`p-4 rounded-xl backdrop-blur-md border shadow-2xl ${
+        isDarkMode 
+          ? 'bg-gray-800/90 border-gray-700' 
+          : 'bg-white/90 border-gray-200'
+      }`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-blue-500" />
+            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Clock
+            </span>
+          </div>
+          <button
+            onClick={() => setShowPopup(false)}
+            className={`p-1 rounded hover:bg-gray-200 ${
+              isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
+            }`}
+          >
+            <Minimize2 className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="text-center">
+          <div className={`text-2xl font-mono font-bold mb-1 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            {displayTime.toLocaleTimeString('en-US', { 
+              hour12: false, 
+              hour: '2-digit', 
+              minute: '2-digit'
+            })}
+          </div>
+          <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {displayTime.toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              month: 'short', 
+              day: 'numeric' 
+            })}
+          </div>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      {showPopup && <PopupClock />}
+      
+      <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className={`p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-blue-500" />
+              <h1 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Clock
+              </h1>
+            </div>
+            <button
+              onClick={togglePopup}
+              className={`p-2 rounded-lg hover:bg-gray-200 ${
+                isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'text-gray-700'
+              }`}
+              title="Toggle popup view"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
       <div className="flex-1 p-6 flex flex-col items-center justify-center">
         <div className="text-center mb-8">
@@ -92,7 +168,8 @@ const ClockApp: React.FC = () => {
           </select>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -24,6 +24,9 @@ interface OSContextType {
   updateWindowPosition: (id: string, position: { x: number; y: number }) => void;
   updateWindowSize: (id: string, size: { width: number; height: number }) => void;
   currentTime: string;
+  isDockVisible: boolean;
+  setIsDockVisible: (visible: boolean) => void;
+  onWindowOpen: (callback: () => void) => () => void;
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -40,6 +43,8 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [currentTime, setCurrentTime] = useState('');
+  const [isDockVisible, setIsDockVisible] = useState(true);
+  const [windowOpenCallbacks, setWindowOpenCallbacks] = useState<(() => void)[]>([]);
 
   // Update time every second
   useEffect(() => {
@@ -85,10 +90,23 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     };
 
     setWindows(prev => [...prev, newWindow]);
+    
+    // Hide dock when opening an application
+    setIsDockVisible(false);
+    
+    // Notify listeners that a window was opened
+    windowOpenCallbacks.forEach(callback => callback());
   };
 
   const closeWindow = (id: string) => {
-    setWindows(prev => prev.filter(w => w.id !== id));
+    setWindows(prev => {
+      const remaining = prev.filter(w => w.id !== id);
+      // Show dock when all windows are closed
+      if (remaining.length === 0) {
+        setIsDockVisible(true);
+      }
+      return remaining;
+    });
   };
 
   const minimizeWindow = (id: string) => {
@@ -127,6 +145,15 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     ));
   };
 
+  const onWindowOpen = (callback: () => void) => {
+    setWindowOpenCallbacks(prev => [...prev, callback]);
+    
+    // Return cleanup function
+    return () => {
+      setWindowOpenCallbacks(prev => prev.filter(cb => cb !== callback));
+    };
+  };
+
   return (
     <OSContext.Provider value={{
       isDarkMode,
@@ -140,6 +167,9 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       updateWindowPosition,
       updateWindowSize,
       currentTime,
+      isDockVisible,
+      setIsDockVisible,
+      onWindowOpen,
     }}>
       {children}
     </OSContext.Provider>

@@ -14,7 +14,8 @@ import {
   Calendar,
   Building2,
   Users,
-  Code
+  Code,
+  FileSpreadsheet
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -28,6 +29,7 @@ import CalendarApp from '@/components/apps/CalendarApp';
 import AczenBilzApp from '@/components/apps/AczenBilzApp';
 import AczenCRMApp from '@/components/apps/AczenCRMApp';
 import AczenIDEApp from '@/components/apps/AczenIDEApp';
+import AczenSheetsApp from '@/components/apps/AczenSheetsApp';
 
 const AppLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +38,7 @@ const AppLauncher: React.FC = () => {
   const apps = [
     {
       id: 'browser',
-      title: 'Safari',
+      title: 'Web Browser',
       icon: Globe,
       component: WebBrowser,
       color: 'bg-blue-500'
@@ -82,6 +84,13 @@ const AppLauncher: React.FC = () => {
       icon: Calendar,
       component: CalendarApp,
       color: 'bg-red-500'
+    },
+    {
+      id: 'aczen-sheets',
+      title: 'Aczen Sheets',
+      icon: FileSpreadsheet,
+      component: AczenSheetsApp,
+      color: 'bg-green-600'
     },
     {
       id: 'aczen-bilz',
