@@ -123,21 +123,21 @@ const ClockApp: React.FC<ClockAppProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          {/* Time Display */}
-          <div className="text-center mb-8">
-            <div className={`text-8xl md:text-9xl font-mono font-bold mb-4 ${
+        {/* Main Clock Display - Centered like the reference */}
+        <div className="flex-1 flex flex-col items-center justify-center relative">
+          {/* Large centered time display */}
+          <div className="text-center">
+            <div className={`text-[12rem] md:text-[16rem] font-light tracking-tight leading-none mb-4 ${
               isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
+            }`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               {displayTime.toLocaleTimeString('en-US', { 
                 hour12: false, 
                 hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
+                minute: '2-digit'
               })}
             </div>
             
-            {/* Date and Day */}
+            {/* Date and Day below time */}
             <div className={`text-2xl mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               {displayTime.toLocaleDateString('en-US', { 
                 year: 'numeric', 
@@ -152,9 +152,9 @@ const ClockApp: React.FC<ClockAppProps> = ({
             </div>
           </div>
 
-          {/* Timezone Selector */}
-          <div className="w-full max-w-md">
-            <label className={`block text-sm font-medium mb-2 ${
+          {/* Timezone Selector - positioned at bottom */}
+          <div className="absolute bottom-8 w-full max-w-md px-6">
+            <label className={`block text-sm font-medium mb-2 text-center ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
               Timezone
@@ -162,7 +162,7 @@ const ClockApp: React.FC<ClockAppProps> = ({
             <select
               value={selectedTimezone}
               onChange={(e) => setSelectedTimezone(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg ${
+              className={`w-full px-3 py-2 border rounded-lg text-center ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-600 text-white' 
                   : 'bg-white border-gray-300 text-gray-900'
