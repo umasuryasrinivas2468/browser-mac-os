@@ -88,32 +88,45 @@ const Window: React.FC<WindowProps> = ({ window }) => {
         }`}
         onMouseDown={handleMouseDown}
       >
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => closeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
-          >
-            <X className="w-2 h-2 text-red-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </button>
-          <button
-            onClick={() => minimizeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
-          >
-            <Minus className="w-2 h-2 text-yellow-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </button>
-          <button
-            onClick={() => maximizeWindow(window.id)}
-            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center group transition-all duration-200 z-[9999]"
-          >
-            <Square className="w-1.5 h-1.5 text-green-900 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </button>
-        </div>
-        
         <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
           {window.title}
         </div>
         
-        <div className="w-12"></div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => minimizeWindow(window.id)}
+            className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 z-[9999] ${
+              isDarkMode 
+                ? 'hover:bg-gray-600 text-gray-400 hover:text-gray-200' 
+                : 'hover:bg-gray-200 text-gray-600 hover:text-gray-800'
+            }`}
+            title="Minimize"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => maximizeWindow(window.id)}
+            className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 z-[9999] ${
+              isDarkMode 
+                ? 'hover:bg-gray-600 text-gray-400 hover:text-gray-200' 
+                : 'hover:bg-gray-200 text-gray-600 hover:text-gray-800'
+            }`}
+            title="Maximize"
+          >
+            <Square className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => closeWindow(window.id)}
+            className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 z-[9999] ${
+              isDarkMode 
+                ? 'hover:bg-red-600 text-gray-400 hover:text-white' 
+                : 'hover:bg-red-500 text-gray-600 hover:text-white'
+            }`}
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Window Content */}

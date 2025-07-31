@@ -30,7 +30,7 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     }
     
     if (lowerQuery.includes('builders of aczen') || lowerQuery.includes('aczen team') || lowerQuery.includes('aczen founders')) {
-      return 'Aczen OS was envisioned and built by Uma Surya Srinivas, the youngest CEO of India and founder of Aczen Technologies, with his team: nuthan kalyan, karthik, hemanth, charitha, devanshi sahu, anie\nHe led a passionate team of engineers and designers focused on creating an AI-native, browser-based OS for Bharat.\nTogether, they built Aczen OS to empower SMBs, students, and developers with accessible, cloud-powered tools.';
+      return 'Aczen OS was envisioned and brought to life by Uma Surya Srinivas, the youngest CEO of India and founder of Aczen Technologies, along with his dedicated team — Nuthan Kalyan,Venkatesh, Karthik, Charitha, Hemanth,Sajana, Devanshi Sahu, and  Leading a passionate group of engineers and designers, he spearheaded the development of an AI-native, browser-based operating system tailored for Bharat.Together, they created Aczen OS to empower SMBs, students, and developers with accessible, cloud-powered tools designed for the future.';
     }
     
     return null;
@@ -66,6 +66,14 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       setIsLoading(false);
       return;
     }
+
+    // Check if API key is configured
+    const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
+    if (!apiKey) {
+      setError('Mistral AI API key is not configured. Please check your environment variables.');
+      setIsLoading(false);
+      return;
+    }
     
     // Create an AbortController for timeout handling
     const controller = new AbortController();
@@ -74,24 +82,24 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     try {
       console.log('Starting search for:', searchQuery);
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDXXwEWh4-4qAWV8123H2-uvADeC9Vaz_w`, {
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
         signal: controller.signal,
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Please provide a concise and accurate answer to this question: ${searchQuery}`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.4,
-            topK: 32,
-            topP: 1,
-            maxOutputTokens: 1000,
-          }
+          model: 'mistral-large-latest',
+          messages: [
+            {
+              role: 'user',
+              content: `Please provide a concise and accurate answer to this question: ${searchQuery}`
+            }
+          ],
+          temperature: 0.4,
+          top_p: 1,
+          max_tokens: 1000,
         }),
       });
 
@@ -104,8 +112,8 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       const data = await response.json();
       console.log('API response received:', data);
       
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        setResult(data.candidates[0].content.parts[0].text);
+      if (data.choices && data.choices[0] && data.choices[0].message) {
+        setResult(data.choices[0].message.content);
         setError('');
       } else {
         throw new Error('Invalid response format from API');
@@ -118,7 +126,9 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
         setError('Request timed out. Please try again with a shorter query.');
       } else if (error.message.includes('429')) {
         setError('Too many requests. Please wait a moment and try again.');
-      } else if (error.message.includes('quota')) {
+      } else if (error.message.includes('401')) {
+        setError('Authentication failed. Please check API configuration.');
+      } else if (error.message.includes('quota') || error.message.includes('limit')) {
         setError('API quota exceeded. Please try again later.');
       } else {
         setError('Sorry, there was an error processing your request. Please try again.');

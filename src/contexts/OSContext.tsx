@@ -27,6 +27,12 @@ interface OSContextType {
   isDockVisible: boolean;
   setIsDockVisible: (visible: boolean) => void;
   onWindowOpen: (callback: () => void) => () => void;
+  currentDesktop: number;
+  setCurrentDesktop: (desktop: number) => void;
+  desktops: { [key: number]: WindowState[] };
+  createNewDesktop: () => number;
+  deleteDesktop: (desktopId: number) => void;
+  availableDesktops: number[];
 }
 
 const OSContext = createContext<OSContextType | undefined>(undefined);
@@ -41,10 +47,45 @@ export const useOS = () => {
 
 export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [windows, setWindows] = useState<WindowState[]>([]);
   const [currentTime, setCurrentTime] = useState('');
   const [isDockVisible, setIsDockVisible] = useState(true);
   const [windowOpenCallbacks, setWindowOpenCallbacks] = useState<(() => void)[]>([]);
+  const [currentDesktop, setCurrentDesktop] = useState(1);
+  const [desktops, setDesktops] = useState<{ [key: number]: WindowState[] }>({
+    1: [],
+    2: []
+  });
+  const [nextDesktopId, setNextDesktopId] = useState(3);
+
+  // Get windows for current desktop
+  const windows = desktops[currentDesktop] || [];
+  const availableDesktops = Object.keys(desktops).map(Number).sort();
+
+  const createNewDesktop = () => {
+    const newId = nextDesktopId;
+    setDesktops(prev => ({
+      ...prev,
+      [newId]: []
+    }));
+    setNextDesktopId(prev => prev + 1);
+    return newId;
+  };
+
+  const deleteDesktop = (desktopId: number) => {
+    if (availableDesktops.length <= 1) return; // Don't delete the last desktop
+    
+    setDesktops(prev => {
+      const newDesktops = { ...prev };
+      delete newDesktops[desktopId];
+      return newDesktops;
+    });
+    
+    // Switch to another desktop if current one is being deleted
+    if (currentDesktop === desktopId) {
+      const remainingDesktops = availableDesktops.filter(id => id !== desktopId);
+      setCurrentDesktop(remainingDesktops[0]);
+    }
+  };
 
   // Update time every second
   useEffect(() => {
@@ -89,7 +130,10 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       zIndex: Math.max(...windows.map(w => w.zIndex), 0) + 1,
     };
 
-    setWindows(prev => [...prev, newWindow]);
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: [...prev[currentDesktop], newWindow]
+    }));
     
     // Hide dock when opening an application
     setIsDockVisible(false);
@@ -99,50 +143,68 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const closeWindow = (id: string) => {
-    setWindows(prev => {
-      const remaining = prev.filter(w => w.id !== id);
+    setDesktops(prev => {
+      const remaining = prev[currentDesktop].filter(w => w.id !== id);
       // Show dock when all windows are closed
       if (remaining.length === 0) {
         setIsDockVisible(true);
       }
-      return remaining;
+      return {
+        ...prev,
+        [currentDesktop]: remaining
+      };
     });
   };
 
   const minimizeWindow = (id: string) => {
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { ...w, isMinimized: true } : w
-    ));
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: prev[currentDesktop].map(w => 
+        w.id === id ? { ...w, isMinimized: true } : w
+      )
+    }));
   };
 
   const maximizeWindow = (id: string) => {
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { 
-        ...w, 
-        isMaximized: !w.isMaximized,
-        position: w.isMaximized ? { x: 100, y: 100 } : { x: 0, y: 0 },
-        size: w.isMaximized ? { width: 800, height: 600 } : { width: window.innerWidth, height: window.innerHeight - 80 }
-      } : w
-    ));
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: prev[currentDesktop].map(w => 
+        w.id === id ? { 
+          ...w, 
+          isMaximized: !w.isMaximized,
+          position: w.isMaximized ? { x: 100, y: 100 } : { x: 0, y: 0 },
+          size: w.isMaximized ? { width: 800, height: 600 } : { width: window.innerWidth, height: window.innerHeight - 80 }
+        } : w
+      )
+    }));
   };
 
   const focusWindow = (id: string) => {
     const maxZ = Math.max(...windows.map(w => w.zIndex));
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { ...w, zIndex: maxZ + 1, isMinimized: false } : w
-    ));
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: prev[currentDesktop].map(w => 
+        w.id === id ? { ...w, zIndex: maxZ + 1, isMinimized: false } : w
+      )
+    }));
   };
 
   const updateWindowPosition = (id: string, position: { x: number; y: number }) => {
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { ...w, position } : w
-    ));
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: prev[currentDesktop].map(w => 
+        w.id === id ? { ...w, position } : w
+      )
+    }));
   };
 
   const updateWindowSize = (id: string, size: { width: number; height: number }) => {
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { ...w, size } : w
-    ));
+    setDesktops(prev => ({
+      ...prev,
+      [currentDesktop]: prev[currentDesktop].map(w => 
+        w.id === id ? { ...w, size } : w
+      )
+    }));
   };
 
   const onWindowOpen = (callback: () => void) => {
@@ -170,6 +232,12 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       isDockVisible,
       setIsDockVisible,
       onWindowOpen,
+      currentDesktop,
+      setCurrentDesktop,
+      desktops,
+      createNewDesktop,
+      deleteDesktop,
+      availableDesktops,
     }}>
       {children}
     </OSContext.Provider>

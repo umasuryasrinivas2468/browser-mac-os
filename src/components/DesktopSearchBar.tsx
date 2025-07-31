@@ -31,29 +31,20 @@ const DesktopSearchBar: React.FC = () => {
 
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-        <div className={`rounded-lg backdrop-blur-xl border ${
+      {/* Search Icon Button */}
+      <button
+        onClick={handleClick}
+        className={`fixed bottom-4 right-4 w-10 h-10 rounded-lg ${
           isDarkMode 
-            ? 'bg-black/40 border-white/10' 
-            : 'bg-white/40 border-black/10'
-        }`}>
-          <form onSubmit={handleSearch} className="py-2 px-3">
-            <div className="flex items-center space-x-3">
-              <Bot className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onClick={handleClick}
-                placeholder="Search with AI..."
-                className={`w-64 bg-transparent border-none outline-none text-sm cursor-pointer ${
-                  isDarkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'
-                }`}
-              />
-            </div>
-          </form>
-        </div>
-      </div>
+            ? 'bg-gray-800/80 hover:bg-gray-700/80' 
+            : 'bg-white/80 hover:bg-gray-100/80'
+        } backdrop-blur-md border ${
+          isDarkMode ? 'border-gray-600' : 'border-gray-200'
+        } flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg z-30`}
+        title="AI Search"
+      >
+        <Bot className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
+      </button>
 
       <SearchPopup
         isOpen={showSearchPopup}

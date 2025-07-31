@@ -59,6 +59,20 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Mistral AI (for AI-powered search functionality)
+
+## AI Configuration
+
+This project uses Mistral AI for the search functionality. To set up:
+
+1. Get your API key from [Mistral AI Console](https://console.mistral.ai/)
+2. Copy `.env.example` to `.env`
+3. Replace `your_mistral_api_key_here` with your actual API key
+
+```bash
+cp .env.example .env
+# Edit .env and add your Mistral AI API key
+```
 
 ## How can I deploy this project?
 

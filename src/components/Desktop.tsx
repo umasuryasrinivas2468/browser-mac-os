@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useOS } from '@/contexts/OSContext';
 import MenuBar from './MenuBar';
@@ -8,6 +8,9 @@ import Window from './Window';
 import SpotlightSearch from './SpotlightSearch';
 import AppLauncher from './AppLauncher';
 import DesktopSearchBar from './DesktopSearchBar';
+import SearchPopup from './SearchPopup';
+import DesktopTransition from './DesktopTransition';
+import DesktopIndicator from './DesktopIndicator';
 import CopyProtection from './CopyProtection';
 import ClerkPopup from './ClerkPopup';
 import PopupApps from './PopupApps';
@@ -19,11 +22,12 @@ import CalendarApp from './apps/CalendarApp';
 import AczenSheetsApp from './apps/AczenSheetsApp';
 
 const Desktop: React.FC = () => {
-  const { windows, isDarkMode, openWindow } = useOS();
+  const { windows, isDarkMode, openWindow, currentDesktop, setCurrentDesktop, availableDesktops } = useOS();
   const { isSignedIn } = useUser();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [showClerkPopup, setShowClerkPopup] = useState(false);
   const [clerkMode, setClerkMode] = useState<'signin' | 'signup' | 'profile' | 'settings'>('signin');
+  const [showSearchFromMenu, setShowSearchFromMenu] = useState(false);
 
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,6 +46,44 @@ const Desktop: React.FC = () => {
     }
     setShowClerkPopup(true);
   };
+
+  const handleSearchClick = () => {
+    setShowSearchFromMenu(true);
+  };
+
+  // Keyboard shortcuts for desktop switching
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + Arrow keys for desktop switching
+      if (e.ctrlKey) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const currentIndex = availableDesktops.indexOf(currentDesktop);
+          if (currentIndex > 0) {
+            setCurrentDesktop(availableDesktops[currentIndex - 1]);
+          }
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const currentIndex = availableDesktops.indexOf(currentDesktop);
+          if (currentIndex < availableDesktops.length - 1) {
+            setCurrentDesktop(availableDesktops[currentIndex + 1]);
+          }
+        }
+      }
+      
+      // Ctrl + Number keys for direct desktop switching
+      if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        const desktopNumber = parseInt(e.key);
+        if (availableDesktops.includes(desktopNumber)) {
+          setCurrentDesktop(desktopNumber);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentDesktop, availableDesktops, setCurrentDesktop]);
 
   const contextMenuItems = [
     { label: 'Refresh', icon: null, action: () => window.location.reload() },
@@ -112,21 +154,25 @@ const Desktop: React.FC = () => {
             // This will be handled by PopupApps component through a custom event
             window.dispatchEvent(new CustomEvent('togglePopularApps'));
           }}
+          onSearchClick={handleSearchClick}
         />
         
 
         
         {/* Windows - Higher z-index */}
-        <div className="desktop-windows">
-          {windows.map((window) => (
-            <Window key={window.id} window={window} />
-          ))}
-        </div>
+        <DesktopTransition>
+          <div className="desktop-windows">
+            {windows.map((window) => (
+              <Window key={window.id} window={window} />
+            ))}
+          </div>
+        </DesktopTransition>
 
         <Dock />
         <SpotlightSearch />
         <AppLauncher />
         <DesktopSearchBar />
+        <DesktopIndicator />
         <PopupApps />
 
         {/* Context Menu */}
@@ -164,6 +210,13 @@ const Desktop: React.FC = () => {
           isOpen={showClerkPopup}
           onClose={() => setShowClerkPopup(false)}
           mode={clerkMode}
+        />
+
+        {/* Search Popup from Menu */}
+        <SearchPopup
+          isOpen={showSearchFromMenu}
+          onClose={() => setShowSearchFromMenu(false)}
+          initialQuery=""
         />
       </div>
     </>
