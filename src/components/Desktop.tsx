@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useOS } from '@/contexts/OSContext';
@@ -10,7 +9,6 @@ import AppLauncher from './AppLauncher';
 import DesktopSearchBar from './DesktopSearchBar';
 import SearchPopup from './SearchPopup';
 import DesktopTransition from './DesktopTransition';
-import DesktopIndicator from './DesktopIndicator';
 import CopyProtection from './CopyProtection';
 import ClerkPopup from './ClerkPopup';
 import PopupApps from './PopupApps';
@@ -157,8 +155,6 @@ const Desktop: React.FC = () => {
           onSearchClick={handleSearchClick}
         />
         
-
-        
         {/* Windows - Higher z-index */}
         <DesktopTransition>
           <div className="desktop-windows">
@@ -172,7 +168,6 @@ const Desktop: React.FC = () => {
         <SpotlightSearch />
         <AppLauncher />
         <DesktopSearchBar />
-        <DesktopIndicator />
         <PopupApps />
 
         {/* Context Menu */}
