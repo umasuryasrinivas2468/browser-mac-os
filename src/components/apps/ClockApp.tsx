@@ -123,51 +123,59 @@ const ClockApp: React.FC<ClockAppProps> = ({
           </div>
         </div>
 
-      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-        <div className="text-center mb-8">
-          <div className={`text-6xl md:text-8xl font-mono font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
-            {displayTime.toLocaleTimeString('en-US', { 
-              hour12: false, 
-              hour: '2-digit', 
-              minute: '2-digit',
-              second: '2-digit'
-            })}
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          {/* Time Display */}
+          <div className="text-center mb-8">
+            <div className={`text-8xl md:text-9xl font-mono font-bold mb-4 ${
+              isDarkMode ? 'text-white' : 'text-gray-900'
+            }`}>
+              {displayTime.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+              })}
+            </div>
+            
+            {/* Date and Day */}
+            <div className={`text-2xl mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              {displayTime.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+            <div className={`text-xl ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {displayTime.toLocaleDateString('en-US', { 
+                weekday: 'long'
+              })}
+            </div>
           </div>
-          <div className={`text-xl ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            {displayTime.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </div>
-        </div>
 
-        <div className="w-full max-w-md">
-          <label className={`block text-sm font-medium mb-2 ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Timezone
-          </label>
-          <select
-            value={selectedTimezone}
-            onChange={(e) => setSelectedTimezone(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg ${
-              isDarkMode 
-                ? 'bg-gray-800 border-gray-600 text-white' 
-                : 'bg-white border-gray-300 text-gray-900'
-            }`}
-          >
-            {timezones.map((tz) => (
-              <option key={tz.value} value={tz.value}>
-                {tz.label}
-              </option>
-            ))}
-          </select>
+          {/* Timezone Selector */}
+          <div className="w-full max-w-md">
+            <label className={`block text-sm font-medium mb-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Timezone
+            </label>
+            <select
+              value={selectedTimezone}
+              onChange={(e) => setSelectedTimezone(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              {timezones.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
       </div>
     </>
   );
