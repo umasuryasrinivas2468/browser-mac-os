@@ -15,7 +15,7 @@ const DesktopClock: React.FC = () => {
   }, []);
 
   return (
-    <div className="fixed top-20 left-8 z-30 pointer-events-none select-none">
+    <div className="fixed top-20 left-8 z-5 pointer-events-none select-none">
       <div className={`backdrop-blur-md rounded-2xl p-6 border shadow-2xl ${
         isDarkMode 
           ? 'bg-black/30 border-white/10' 
