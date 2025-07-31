@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -23,6 +24,13 @@ import {
   Share,
   Download
 } from 'lucide-react';
+
+// Extend window interface to include google
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
 
 interface Location {
   lat: number;
@@ -65,13 +73,14 @@ const MapsApp: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [showSavedPlaces, setShowSavedPlaces] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'directions' | 'saved'>('search');
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   // Initialize Google Maps
   useEffect(() => {
     const initMap = () => {
       if (!mapRef.current || !window.google) return;
 
-      const mapInstance = new google.maps.Map(mapRef.current, {
+      const mapInstance = new window.google.maps.Map(mapRef.current, {
         center: { lat: 28.6139, lng: 77.2090 }, // Delhi, India
         zoom: 12,
         mapTypeId: mapType,
@@ -157,8 +166,8 @@ const MapsApp: React.FC = () => {
         ] : undefined,
       });
 
-      const directionsServiceInstance = new google.maps.DirectionsService();
-      const directionsRendererInstance = new google.maps.DirectionsRenderer({
+      const directionsServiceInstance = new window.google.maps.DirectionsService();
+      const directionsRendererInstance = new window.google.maps.DirectionsRenderer({
         draggable: true,
         panel: document.getElementById('directions-panel') || undefined,
       });
@@ -168,6 +177,7 @@ const MapsApp: React.FC = () => {
       setMap(mapInstance);
       setDirectionsService(directionsServiceInstance);
       setDirectionsRenderer(directionsRendererInstance);
+      setIsGoogleMapsLoaded(true);
 
       // Get current location
       getCurrentLocation();
@@ -223,45 +233,45 @@ const MapsApp: React.FC = () => {
   };
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            name: 'Current Location'
-          };
-          setCurrentLocation(location);
-          if (map) {
-            map.setCenter(location);
-            new google.maps.Marker({
-              position: location,
-              map: map,
-              title: 'Your Location',
-              icon: {
-                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="8" fill="#4285F4" stroke="white" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" fill="white"/>
-                  </svg>
-                `),
-                scaledSize: new google.maps.Size(24, 24),
-              }
-            });
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
+    if (!navigator.geolocation || !window.google || !map) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          name: 'Current Location'
+        };
+        setCurrentLocation(location);
+        if (map) {
+          map.setCenter(location);
+          new window.google.maps.Marker({
+            position: location,
+            map: map,
+            title: 'Your Location',
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="8" fill="#4285F4" stroke="white" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" fill="white"/>
+                </svg>
+              `),
+              scaledSize: new window.google.maps.Size(24, 24),
+            }
+          });
         }
-      );
-    }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+      }
+    );
   };
 
   const searchPlaces = async (query: string) => {
-    if (!map || !query.trim()) return;
+    if (!map || !query.trim() || !window.google) return;
 
     setIsLoading(true);
-    const service = new google.maps.places.PlacesService(map);
+    const service = new window.google.maps.places.PlacesService(map);
     
     const request = {
       query: query,
@@ -270,7 +280,7 @@ const MapsApp: React.FC = () => {
 
     service.textSearch(request, (results, status) => {
       setIsLoading(false);
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
         const locations = results.slice(0, 5).map(place => ({
           lat: place.geometry?.location?.lat() || 0,
           lng: place.geometry?.location?.lng() || 0,
@@ -283,14 +293,14 @@ const MapsApp: React.FC = () => {
   };
 
   const calculateRoute = () => {
-    if (!directionsService || !directionsRenderer || !fromLocation || !toLocation) return;
+    if (!directionsService || !directionsRenderer || !fromLocation || !toLocation || !window.google) return;
 
     setIsLoading(true);
     const request = {
       origin: fromLocation,
       destination: toLocation,
       travelMode: travelMode,
-      unitSystem: google.maps.UnitSystem.METRIC,
+      unitSystem: window.google.maps.UnitSystem.METRIC,
       avoidHighways: false,
       avoidTolls: false,
     };
@@ -329,9 +339,9 @@ const MapsApp: React.FC = () => {
       setToLocation(location);
     }
     
-    if (map) {
+    if (map && window.google) {
       map.setCenter(location);
-      new google.maps.Marker({
+      new window.google.maps.Marker({
         position: location,
         map: map,
         title: location.name,
@@ -349,6 +359,25 @@ const MapsApp: React.FC = () => {
     setToLocation(null);
     setRouteInfo(null);
     setShowDirections(false);
+  };
+
+  // Define travel modes with fallback
+  const getTravelModes = () => {
+    if (!window.google) {
+      return [
+        { mode: 'DRIVING' as any, icon: Car, label: 'Drive' },
+        { mode: 'WALKING' as any, icon: User, label: 'Walk' },
+        { mode: 'BICYCLING' as any, icon: Bike, label: 'Bike' },
+        { mode: 'TRANSIT' as any, icon: Zap, label: 'Transit' }
+      ];
+    }
+    
+    return [
+      { mode: window.google.maps.TravelMode.DRIVING, icon: Car, label: 'Drive' },
+      { mode: window.google.maps.TravelMode.WALKING, icon: User, label: 'Walk' },
+      { mode: window.google.maps.TravelMode.BICYCLING, icon: Bike, label: 'Bike' },
+      { mode: window.google.maps.TravelMode.TRANSIT, icon: Zap, label: 'Transit' }
+    ];
   };
 
   return (
@@ -409,7 +438,7 @@ const MapsApp: React.FC = () => {
               
               <button
                 onClick={() => searchPlaces(searchQuery)}
-                disabled={isLoading || !searchQuery.trim()}
+                disabled={isLoading || !searchQuery.trim() || !isGoogleMapsLoaded}
                 className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
                 {isLoading ? 'Searching...' : 'Search'}
@@ -507,12 +536,7 @@ const MapsApp: React.FC = () => {
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Travel Mode</label>
                 <div className="flex space-x-2">
-                  {[
-                    { mode: google.maps?.TravelMode?.DRIVING, icon: Car, label: 'Drive' },
-                    { mode: google.maps?.TravelMode?.WALKING, icon: User, label: 'Walk' },
-                    { mode: google.maps?.TravelMode?.BICYCLING, icon: Bike, label: 'Bike' },
-                    { mode: google.maps?.TravelMode?.TRANSIT, icon: Zap, label: 'Transit' }
-                  ].map(({ mode, icon: Icon, label }) => (
+                  {getTravelModes().map(({ mode, icon: Icon, label }) => (
                     <button
                       key={label}
                       onClick={() => setTravelMode(mode)}
@@ -534,7 +558,7 @@ const MapsApp: React.FC = () => {
               {/* Calculate Route Button */}
               <button
                 onClick={calculateRoute}
-                disabled={!fromLocation || !toLocation || isLoading}
+                disabled={!fromLocation || !toLocation || isLoading || !isGoogleMapsLoaded}
                 className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
                 {isLoading ? 'Calculating...' : 'Get Directions'}
@@ -660,16 +684,18 @@ const MapsApp: React.FC = () => {
           <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               onClick={() => {
-                const newMapType = mapType === google.maps.MapTypeId.ROADMAP 
-                  ? google.maps.MapTypeId.SATELLITE 
-                  : google.maps.MapTypeId.ROADMAP;
+                if (!window.google || !map) return;
+                const newMapType = mapType === window.google.maps.MapTypeId.ROADMAP 
+                  ? window.google.maps.MapTypeId.SATELLITE 
+                  : window.google.maps.MapTypeId.ROADMAP;
                 setMapType(newMapType);
-                if (map) map.setMapTypeId(newMapType);
+                map.setMapTypeId(newMapType);
               }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               title="Toggle map type"
+              disabled={!isGoogleMapsLoaded}
             >
-              {mapType === google.maps.MapTypeId.ROADMAP ? (
+              {mapType === (window.google?.maps.MapTypeId.ROADMAP) ? (
                 <Satellite className="w-5 h-5" />
               ) : (
                 <MapIcon className="w-5 h-5" />
@@ -682,12 +708,14 @@ const MapsApp: React.FC = () => {
             <button
               onClick={() => map && map.setZoom(map.getZoom()! + 1)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg border-b border-gray-200 dark:border-gray-700"
+              disabled={!isGoogleMapsLoaded}
             >
               <Plus className="w-5 h-5" />
             </button>
             <button
               onClick={() => map && map.setZoom(map.getZoom()! - 1)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
+              disabled={!isGoogleMapsLoaded}
             >
               <Minus className="w-5 h-5" />
             </button>
@@ -699,6 +727,7 @@ const MapsApp: React.FC = () => {
               onClick={getCurrentLocation}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               title="Go to current location"
+              disabled={!isGoogleMapsLoaded}
             >
               <Target className="w-5 h-5" />
             </button>
