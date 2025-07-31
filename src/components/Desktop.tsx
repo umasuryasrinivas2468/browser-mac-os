@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useOS } from '@/contexts/OSContext';
@@ -12,6 +13,7 @@ import DesktopTransition from './DesktopTransition';
 import CopyProtection from './CopyProtection';
 import ClerkPopup from './ClerkPopup';
 import PopupApps from './PopupApps';
+import DesktopClock from './DesktopClock';
 import { Calculator, Clock, Calendar, Shield, FileSpreadsheet } from 'lucide-react';
 import TextEditor from './apps/TextEditor';
 import CalculatorApp from './apps/Calculator';
@@ -154,6 +156,9 @@ const Desktop: React.FC = () => {
           }}
           onSearchClick={handleSearchClick}
         />
+        
+        {/* Desktop Clock Widget */}
+        <DesktopClock />
         
         {/* Windows - Higher z-index */}
         <DesktopTransition>
