@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -65,25 +64,36 @@ const MapsApp: React.FC = () => {
   const [toLocation, setToLocation] = useState<Location | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-  const [travelMode, setTravelMode] = useState<google.maps.TravelMode>(google.maps.TravelMode.DRIVING);
-  const [mapType, setMapType] = useState<google.maps.MapTypeId>(google.maps.MapTypeId.ROADMAP);
+  const [travelMode, setTravelMode] = useState<google.maps.TravelMode>(google.maps.TravelMode?.DRIVING);
+  const [mapType, setMapType] = useState<google.maps.MapTypeId>(google.maps.MapTypeId?.ROADMAP);
   const [isLoading, setIsLoading] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [searchResults, setSearchResults] = useState<Location[]>([]);
-  const [showSavedPlaces, setShowSavedPlaces] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'directions' | 'saved'>('search');
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(true);
 
   // Initialize Google Maps
   useEffect(() => {
-    const initMap = () => {
-      if (!mapRef.current || !window.google) return;
+    if (!apiKey) return;
 
+    const initMap = () => {
+      if (!mapRef.current) return;
+
+      // Create map with enhanced styling
       const mapInstance = new window.google.maps.Map(mapRef.current, {
         center: { lat: 28.6139, lng: 77.2090 }, // Delhi, India
         zoom: 12,
         mapTypeId: mapType,
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: true,
+        scaleControl: true,
+        streetViewControl: true,
+        rotateControl: true,
+        fullscreenControl: true,
         styles: isDarkMode ? [
           { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
           { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -183,54 +193,22 @@ const MapsApp: React.FC = () => {
       getCurrentLocation();
     };
 
-    // Load Google Maps API if not already loaded
+    // Load Google Maps API
     if (!window.google) {
-      // For demo purposes, we'll use a fallback map
-      // In production, replace YOUR_API_KEY with actual Google Maps API key
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initMap;
       script.onerror = () => {
-        // Fallback to OpenStreetMap or show error message
-        console.warn('Google Maps API failed to load. Using fallback.');
-        initFallbackMap();
+        console.error('Google Maps API failed to load');
+        setShowApiKeyInput(true);
       };
       document.head.appendChild(script);
     } else {
       initMap();
     }
-  }, [isDarkMode, mapType]);
-
-  const initFallbackMap = () => {
-    if (!mapRef.current) return;
-    
-    // Create a fallback map using OpenStreetMap
-    mapRef.current.innerHTML = `
-      <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-        <div class="text-center p-8">
-          <div class="w-16 h-16 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}">Maps Demo Mode</h3>
-          <p class="text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4">
-            Google Maps API key required for full functionality
-          </p>
-          <div class="space-y-2 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}">
-            <p>• Search for places and locations</p>
-            <p>• Get turn-by-turn directions</p>
-            <p>• Save favorite places</p>
-            <p>• Multiple travel modes (Drive, Walk, Bike, Transit)</p>
-            <p>• Real-time traffic information</p>
-          </div>
-        </div>
-      </div>
-    `;
-  };
+  }, [isDarkMode, mapType, apiKey]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation || !window.google || !map) return;
@@ -380,18 +358,62 @@ const MapsApp: React.FC = () => {
     ];
   };
 
+  if (showApiKeyInput) {
+    return (
+      <div className={`flex flex-col h-full items-center justify-center ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+        <div className="text-center p-8 max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
+            <MapIcon className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-xl font-semibold mb-4">Google Maps API Key Required</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            To use the full-featured maps, please enter your Google Maps API key. You can get one from the Google Cloud Console.
+          </p>
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your Google Maps API key"
+              className={`w-full px-4 py-3 border rounded-lg ${
+                isDarkMode
+                  ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+            />
+            <button
+              onClick={() => {
+                if (apiKey.trim()) {
+                  setShowApiKeyInput(false);
+                }
+              }}
+              disabled={!apiKey.trim()}
+              className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              Load Maps
+            </button>
+          </div>
+          <div className="mt-6 text-xs text-gray-500">
+            <p>Get your API key at:</p>
+            <p className="text-blue-500">console.cloud.google.com</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex h-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-      {/* Sidebar */}
+      {/* Enhanced Sidebar */}
       <div className={`w-80 border-r ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} flex flex-col`}>
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        {/* Header with improved styling */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-500 to-purple-600">
           <div className="flex items-center space-x-2 mb-4">
-            <MapIcon className="w-6 h-6 text-blue-500" />
-            <h1 className="text-xl font-bold">Aczen Maps</h1>
+            <MapIcon className="w-6 h-6 text-white" />
+            <h1 className="text-xl font-bold text-white">Aczen Maps</h1>
           </div>
           
-          {/* Tab Navigation */}
+          {/* Enhanced Tab Navigation */}
           <div className="flex space-x-1">
             {[
               { id: 'search', label: 'Search', icon: Search },
@@ -401,12 +423,10 @@ const MapsApp: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-blue-500 text-white'
-                    : isDarkMode
-                    ? 'text-gray-300 hover:bg-gray-700'
-                    : 'text-gray-600 hover:bg-gray-200'
+                    ? 'bg-white/20 text-white shadow-lg'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -416,7 +436,7 @@ const MapsApp: React.FC = () => {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content with improved styling */}
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'search' && (
             <div className="p-4">
@@ -674,14 +694,14 @@ const MapsApp: React.FC = () => {
         </div>
       </div>
 
-      {/* Map Container */}
+      {/* Map Container with enhanced controls */}
       <div className="flex-1 relative">
         <div ref={mapRef} className="w-full h-full" />
         
-        {/* Map Controls */}
+        {/* Enhanced Map Controls */}
         <div className="absolute top-4 right-4 space-y-2">
-          {/* Map Type Toggle */}
-          <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          {/* Map Type Toggle with improved styling */}
+          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               onClick={() => {
                 if (!window.google || !map) return;
@@ -691,7 +711,7 @@ const MapsApp: React.FC = () => {
                 setMapType(newMapType);
                 map.setMapTypeId(newMapType);
               }}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
               title="Toggle map type"
               disabled={!isGoogleMapsLoaded}
             >
@@ -703,29 +723,29 @@ const MapsApp: React.FC = () => {
             </button>
           </div>
 
-          {/* Zoom Controls */}
-          <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          {/* Enhanced Zoom Controls */}
+          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               onClick={() => map && map.setZoom(map.getZoom()! + 1)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg border-b border-gray-200 dark:border-gray-700"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-xl border-b border-gray-200 dark:border-gray-700 transition-all"
               disabled={!isGoogleMapsLoaded}
             >
               <Plus className="w-5 h-5" />
             </button>
             <button
               onClick={() => map && map.setZoom(map.getZoom()! - 1)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-xl transition-all"
               disabled={!isGoogleMapsLoaded}
             >
               <Minus className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Current Location */}
-          <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          {/* Enhanced Current Location Button */}
+          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <button
               onClick={getCurrentLocation}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all"
               title="Go to current location"
               disabled={!isGoogleMapsLoaded}
             >
@@ -734,12 +754,12 @@ const MapsApp: React.FC = () => {
           </div>
         </div>
 
-        {/* Loading Overlay */}
+        {/* Enhanced Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-              <p className="text-sm">Loading...</p>
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl border">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-sm font-medium">Loading...</p>
             </div>
           </div>
         )}

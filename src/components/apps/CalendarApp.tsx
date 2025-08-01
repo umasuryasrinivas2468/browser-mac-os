@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock } from 'lucide-react';
 
@@ -169,7 +168,7 @@ const CalendarApp: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white relative">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
@@ -223,8 +222,8 @@ const CalendarApp: React.FC = () => {
 
       {/* Add Event Modal */}
       {showAddEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4 pointer-events-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: 99999 }}>
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] mx-4 shadow-2xl border-2 border-gray-200">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-blue-600" />
               Add New Event
@@ -233,40 +232,43 @@ const CalendarApp: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Title
+                  Event Title *
                 </label>
                 <input
                   type="text"
                   value={newEvent.title || ''}
                   onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter event title"
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date
+                    Date *
                   </label>
                   <input
                     type="date"
                     value={newEvent.date || ''}
                     onChange={(e) => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
                     min={getMinDate()}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time
+                    Time *
                   </label>
                   <input
                     type="time"
                     value={newEvent.time || ''}
                     onChange={(e) => setNewEvent(prev => ({ ...prev, time: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
                   />
                 </div>
               </div>
@@ -278,7 +280,7 @@ const CalendarApp: React.FC = () => {
                 <select
                   value={newEvent.category || 'personal'}
                   onChange={(e) => setNewEvent(prev => ({ ...prev, category: e.target.value as EventCategory }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="personal">Personal</option>
                   <option value="work">Work</option>
@@ -294,7 +296,7 @@ const CalendarApp: React.FC = () => {
                 <textarea
                   value={newEvent.description || ''}
                   onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none"
                   placeholder="Enter event description"
                 />
               </div>
@@ -302,14 +304,23 @@ const CalendarApp: React.FC = () => {
 
             <div className="flex justify-end space-x-3 mt-6">
               <button
-                onClick={() => setShowAddEvent(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                onClick={() => {
+                  setShowAddEvent(false);
+                  setNewEvent({
+                    title: '',
+                    date: '',
+                    time: '',
+                    category: 'personal',
+                    description: ''
+                  });
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddEvent}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
               >
                 Add Event
               </button>
