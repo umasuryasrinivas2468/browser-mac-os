@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock } from 'lucide-react';
 
 type EventCategory = 'work' | 'personal' | 'meeting' | 'other';
@@ -15,30 +15,7 @@ interface Event {
 
 const CalendarApp: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Team Meeting',
-      date: '2024-01-15',
-      time: '10:00',
-      category: 'work',
-      description: 'Weekly team sync'
-    },
-    {
-      id: '2',
-      title: 'Lunch with Sarah',
-      date: '2024-01-15',
-      time: '12:30',
-      category: 'personal'
-    },
-    {
-      id: '3',
-      title: 'Project Review',
-      date: '2024-01-16',
-      time: '14:00',
-      category: 'meeting'
-    }
-  ]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event>>({
     title: '',
@@ -47,6 +24,21 @@ const CalendarApp: React.FC = () => {
     category: 'personal',
     description: ''
   });
+
+  // Load events from localStorage on component mount
+  useEffect(() => {
+    const savedEvents = localStorage.getItem('calendar-events');
+    if (savedEvents) {
+      setEvents(JSON.parse(savedEvents));
+    }
+  }, []);
+
+  // Save events to localStorage whenever events change
+  useEffect(() => {
+    localStorage.setItem('calendar-events', JSON.stringify(events));
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('calendar-updated'));
+  }, [events]);
 
   const categoryColors = {
     work: 'bg-blue-500',
@@ -92,6 +84,16 @@ const CalendarApp: React.FC = () => {
 
   const handleAddEvent = () => {
     if (newEvent.title && newEvent.date && newEvent.time) {
+      // Check if the selected date is in the past
+      const selectedDate = new Date(newEvent.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        alert('Cannot schedule events in the past. Please select a future date.');
+        return;
+      }
+
       const event: Event = {
         id: Date.now().toString(),
         title: newEvent.title,
@@ -161,6 +163,11 @@ const CalendarApp: React.FC = () => {
     return days;
   };
 
+  // Get minimum date (today) for date input
+  const getMinDate = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
@@ -216,8 +223,8 @@ const CalendarApp: React.FC = () => {
 
       {/* Add Event Modal */}
       {showAddEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4 pointer-events-auto">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-blue-600" />
               Add New Event
@@ -246,6 +253,7 @@ const CalendarApp: React.FC = () => {
                     type="date"
                     value={newEvent.date || ''}
                     onChange={(e) => setNewEvent(prev => ({ ...prev, date: e.target.value }))}
+                    min={getMinDate()}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

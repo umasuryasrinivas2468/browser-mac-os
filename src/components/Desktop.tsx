@@ -28,6 +28,7 @@ const Desktop: React.FC = () => {
   const [showClerkPopup, setShowClerkPopup] = useState(false);
   const [clerkMode, setClerkMode] = useState<'signin' | 'signup' | 'profile' | 'settings'>('signin');
   const [showSearchFromMenu, setShowSearchFromMenu] = useState(false);
+  const [currentWallpaper, setCurrentWallpaper] = useState('');
 
   const handleRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,6 +51,33 @@ const Desktop: React.FC = () => {
   const handleSearchClick = () => {
     setShowSearchFromMenu(true);
   };
+
+  // Dynamic wallpaper based on time
+  useEffect(() => {
+    const updateWallpaper = () => {
+      const currentHour = new Date().getHours();
+      let wallpaperUrl = '';
+      
+      if (currentHour >= 5 && currentHour < 12) {
+        // Morning: 5 AM to 12 PM
+        wallpaperUrl = 'https://i.pinimg.com/1200x/0e/af/8a/0eaf8a1b97fa457f4fce83f6284522c3.jpg';
+      } else if (currentHour >= 12 && currentHour < 17) {
+        // Afternoon: 12 PM to 5 PM
+        wallpaperUrl = 'https://i.ibb.co/3mZVTzX8/Whats-App-Image-2025-07-28-at-22-37-55-c58f01dd.jpg';
+      } else {
+        // Evening/Night: 5 PM to 5 AM
+        wallpaperUrl = 'https://i.pinimg.com/736x/26/46/16/264616a7b150c04dfea420cbbae797fb.jpg';
+      }
+      
+      setCurrentWallpaper(wallpaperUrl);
+    };
+
+    updateWallpaper();
+    // Update wallpaper every hour
+    const interval = setInterval(updateWallpaper, 60 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Keyboard shortcuts for desktop switching
   useEffect(() => {
@@ -103,18 +131,20 @@ const Desktop: React.FC = () => {
       
       <style>{`
         * {
-          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 8 8, auto;
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 4 4, auto !important;
+          transition: all 0.05s ease !important;
         }
         
         .desktop-cursor {
-          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 8 8, auto;
+          cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>') 4 4, auto !important;
         }
         
-        .custom-wallpaper {
-          background-image: url('https://i.ibb.co/KpTGFDg9/Whats-App-Image-2025-07-28-at-21-52-37-305242a5.jpg');
+        .dynamic-wallpaper {
+          background-image: url('${currentWallpaper}');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
+          transition: background-image 1s ease-in-out;
         }
         
         .glass-icon {
@@ -144,7 +174,7 @@ const Desktop: React.FC = () => {
       `}</style>
 
       <div 
-        className="fixed inset-0 overflow-hidden desktop-cursor custom-wallpaper no-copy"
+        className="fixed inset-0 overflow-hidden desktop-cursor dynamic-wallpaper no-copy"
         onContextMenu={handleRightClick}
         onClick={handleClickOutside}
       >

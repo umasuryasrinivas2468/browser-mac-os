@@ -162,18 +162,18 @@ const DesktopClock: React.FC = () => {
           </div>
         </div>
 
-        {/* Events Widget - 5CM x 2CM */}
+        {/* Events Widget - 5CM x 3CM */}
         <div className={`backdrop-blur-md rounded-2xl p-3 border shadow-2xl ${
           isDarkMode 
             ? 'bg-black/30 border-white/10' 
             : 'bg-white/20 border-white/30'
-        }`} style={{ width: '5cm', height: '2cm' }}>
+        }`} style={{ width: '5cm', height: '3cm' }}>
           <div className="flex items-center mb-2">
             <Calendar className={`w-3 h-3 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>Today</span>
+            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>Today's Events</span>
           </div>
           
-          <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(2cm - 24px)' }}>
+          <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(3cm - 30px)' }}>
             {todaysEvents.length === 0 ? (
               <div className={`text-xs ${isDarkMode ? 'text-white/60' : 'text-white/70'}`}>
                 No events today
@@ -191,25 +191,25 @@ const DesktopClock: React.FC = () => {
           </div>
         </div>
 
-        {/* News Widget - 5CM x 2CM */}
+        {/* News Widget - 5CM x 3CM */}
         <div 
           className={`backdrop-blur-md rounded-2xl p-3 border shadow-2xl cursor-pointer pointer-events-auto hover:bg-opacity-40 transition-all ${
             isDarkMode 
               ? 'bg-black/30 border-white/10 hover:bg-black/40' 
               : 'bg-white/20 border-white/30 hover:bg-white/30'
           }`} 
-          style={{ width: '5cm', height: '2cm' }}
+          style={{ width: '5cm', height: '3cm' }}
           onClick={handleNewsClick}
         >
           <div className="flex items-center mb-2">
             <ExternalLink className={`w-3 h-3 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>News</span>
+            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>Latest News</span>
           </div>
           
           <div className={`text-xs leading-tight ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
             <div className="font-medium mb-1" style={{ 
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden'
             }}>
