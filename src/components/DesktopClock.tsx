@@ -4,17 +4,19 @@ import { useOS } from '@/contexts/OSContext';
 import { Cloud, Sun, CloudRain, Calendar, ExternalLink } from 'lucide-react';
 
 const DesktopClock: React.FC = () => {
-  const { isDarkMode } = useOS();
+  const { isDarkMode, windows } = useOS();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState({
     temp: '28°C',
     condition: 'Sunny',
     icon: Sun
   });
-  const [todaysEvents, setTodaysEvents] = useState([
-    { id: '1', title: 'Team Meeting', time: '10:00' },
-    { id: '2', title: 'Lunch with Sarah', time: '12:30' }
-  ]);
+  const [todaysEvents, setTodaysEvents] = useState<Array<{
+    id: string;
+    title: string;
+    time: string;
+    date: Date;
+  }>>([]);
   const [latestNews, setLatestNews] = useState({
     headline: 'India Successfully Launches New Space Mission to Mars',
     summary: 'ISRO achieves another milestone with the successful launch of Mars exploration mission...',
@@ -28,6 +30,47 @@ const DesktopClock: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Get real calendar events from localStorage or other storage
+  useEffect(() => {
+    const loadTodaysEvents = () => {
+      try {
+        // Get calendar events from localStorage (assuming CalendarApp saves events there)
+        const savedEvents = localStorage.getItem('calendar-events');
+        if (savedEvents) {
+          const allEvents = JSON.parse(savedEvents);
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0];
+          
+          // Filter events for today
+          const todayEvents = allEvents.filter((event: any) => {
+            const eventDate = new Date(event.date).toISOString().split('T')[0];
+            return eventDate === todayStr;
+          }).slice(0, 3); // Show only first 3 events
+          
+          setTodaysEvents(todayEvents);
+        }
+      } catch (error) {
+        console.error('Error loading calendar events:', error);
+        setTodaysEvents([]);
+      }
+    };
+
+    loadTodaysEvents();
+    
+    // Listen for calendar updates
+    const handleStorageChange = () => {
+      loadTodaysEvents();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('calendar-updated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('calendar-updated', handleStorageChange);
+    };
   }, []);
 
   const WeatherIcon = weather.icon;
@@ -71,14 +114,14 @@ const DesktopClock: React.FC = () => {
   return (
     <>
       <div className="fixed top-20 left-8 z-5 pointer-events-none select-none space-y-4">
-        {/* Clock Widget - 4CM */}
-        <div className={`backdrop-blur-md rounded-2xl p-6 border shadow-2xl ${
+        {/* Clock Widget - 5CM x 2CM */}
+        <div className={`backdrop-blur-md rounded-2xl p-4 border shadow-2xl ${
           isDarkMode 
             ? 'bg-black/30 border-white/10' 
             : 'bg-white/20 border-white/30'
-        }`} style={{ width: '4cm', minHeight: '4cm' }}>
-          <div className="text-center">
-            <div className={`text-3xl font-light tracking-tight leading-none mb-2 ${
+        }`} style={{ width: '5cm', height: '2cm' }}>
+          <div className="flex items-center justify-between h-full">
+            <div className={`text-2xl font-light tracking-tight ${
               isDarkMode ? 'text-white' : 'text-white'
             }`} style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               {currentTime.toLocaleTimeString('en-US', { 
@@ -88,7 +131,7 @@ const DesktopClock: React.FC = () => {
               })}
             </div>
             
-            <div className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
+            <div className={`text-sm text-right ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
               {currentTime.toLocaleDateString('en-US', { 
                 weekday: 'short',
                 month: 'short', 
@@ -98,61 +141,78 @@ const DesktopClock: React.FC = () => {
           </div>
         </div>
 
-        {/* Weather Widget - 4CM */}
-        <div className={`backdrop-blur-md rounded-2xl p-6 border shadow-2xl ${
-          isDarkMode 
-            ? 'bg-black/30 border-white/10' 
-            : 'bg-white/20 border-white/30'
-        }`} style={{ width: '4cm', minHeight: '4cm' }}>
-          <div className="text-center">
-            <WeatherIcon className={`w-8 h-8 mx-auto mb-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-            <div className={`text-2xl font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-white'}`}>
-              {weather.temp}
-            </div>
-            <div className={`text-sm ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
-              {weather.condition}
-            </div>
-          </div>
-        </div>
-
-        {/* Events Widget - 4CM */}
+        {/* Weather Widget - 5CM x 2CM */}
         <div className={`backdrop-blur-md rounded-2xl p-4 border shadow-2xl ${
           isDarkMode 
             ? 'bg-black/30 border-white/10' 
             : 'bg-white/20 border-white/30'
-        }`} style={{ width: '4cm', minHeight: '4cm' }}>
-          <div className="flex items-center mb-3">
-            <Calendar className={`w-4 h-4 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>Today</span>
-          </div>
-          
-          <div className="space-y-2">
-            {todaysEvents.slice(0, 2).map((event) => (
-              <div key={event.id} className={`text-xs ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
-                <div className="font-medium truncate">{event.time}</div>
-                <div className="truncate">{event.title}</div>
+        }`} style={{ width: '5cm', height: '2cm' }}>
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center space-x-3">
+              <WeatherIcon className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-white'}`} />
+              <div>
+                <div className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-white'}`}>
+                  {weather.temp}
+                </div>
+                <div className={`text-xs ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
+                  {weather.condition}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* News Widget - 4CM */}
+        {/* Events Widget - 5CM x 2CM */}
+        <div className={`backdrop-blur-md rounded-2xl p-3 border shadow-2xl ${
+          isDarkMode 
+            ? 'bg-black/30 border-white/10' 
+            : 'bg-white/20 border-white/30'
+        }`} style={{ width: '5cm', height: '2cm' }}>
+          <div className="flex items-center mb-2">
+            <Calendar className={`w-3 h-3 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
+            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>Today</span>
+          </div>
+          
+          <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(2cm - 24px)' }}>
+            {todaysEvents.length === 0 ? (
+              <div className={`text-xs ${isDarkMode ? 'text-white/60' : 'text-white/70'}`}>
+                No events today
+              </div>
+            ) : (
+              todaysEvents.map((event) => (
+                <div key={event.id} className={`text-xs ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium truncate flex-1">{event.title}</span>
+                    <span className="text-xs ml-2">{event.time}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* News Widget - 5CM x 2CM */}
         <div 
-          className={`backdrop-blur-md rounded-2xl p-4 border shadow-2xl cursor-pointer pointer-events-auto hover:bg-opacity-40 transition-all ${
+          className={`backdrop-blur-md rounded-2xl p-3 border shadow-2xl cursor-pointer pointer-events-auto hover:bg-opacity-40 transition-all ${
             isDarkMode 
               ? 'bg-black/30 border-white/10 hover:bg-black/40' 
               : 'bg-white/20 border-white/30 hover:bg-white/30'
           }`} 
-          style={{ width: '4cm', minHeight: '4cm' }}
+          style={{ width: '5cm', height: '2cm' }}
           onClick={handleNewsClick}
         >
           <div className="flex items-center mb-2">
-            <ExternalLink className={`w-4 h-4 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-            <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>News</span>
+            <ExternalLink className={`w-3 h-3 mr-2 ${isDarkMode ? 'text-white' : 'text-white'}`} />
+            <span className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-white'}`}>News</span>
           </div>
           
           <div className={`text-xs leading-tight ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
-            <div className="font-medium mb-1 line-clamp-3">
+            <div className="font-medium mb-1" style={{ 
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
               {latestNews.headline}
             </div>
             <div className={`text-xs ${isDarkMode ? 'text-white/60' : 'text-white/70'}`}>

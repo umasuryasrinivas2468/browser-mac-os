@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -16,7 +15,9 @@ import {
   Users,
   Code,
   FileSpreadsheet,
-  Search
+  Search,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -31,6 +32,8 @@ import AczenBilzApp from '@/components/apps/AczenBilzApp';
 import AczenCRMApp from '@/components/apps/AczenCRMApp';
 import AczenIDEApp from '@/components/apps/AczenIDEApp';
 import AczenSheetsApp from '@/components/apps/AczenSheetsApp';
+import MapsApp from '@/components/apps/MapsApp';
+import AczenCallApp from '@/components/apps/AczenCallApp';
 
 const AppLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -88,6 +91,20 @@ const AppLauncher: React.FC = () => {
       color: 'bg-red-500'
     },
     {
+      id: 'maps',
+      title: 'Maps',
+      icon: MapPin,
+      component: MapsApp,
+      color: 'bg-green-500'
+    },
+    {
+      id: 'aczen-call',
+      title: 'Aczen Call',
+      icon: Phone,
+      component: AczenCallApp,
+      color: 'bg-purple-600'
+    },
+    {
       id: 'aczen-sheets',
       title: 'Aczen Sheets',
       icon: FileSpreadsheet,
@@ -131,7 +148,6 @@ const AppLauncher: React.FC = () => {
     }
   ];
 
-  // Filter apps based on search query
   const filteredApps = useMemo(() => {
     if (!searchQuery.trim()) {
       return apps;
@@ -148,12 +164,12 @@ const AppLauncher: React.FC = () => {
       component: app.component
     });
     setIsOpen(false);
-    setSearchQuery(''); // Clear search when app is opened
+    setSearchQuery('');
   };
 
   const handleClose = () => {
     setIsOpen(false);
-    setSearchQuery(''); // Clear search when closing
+    setSearchQuery('');
   };
 
   return (
