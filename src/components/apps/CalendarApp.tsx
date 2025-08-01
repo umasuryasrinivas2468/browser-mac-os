@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock } from 'lucide-react';
 
 type EventCategory = 'work' | 'personal' | 'meeting' | 'other';
@@ -220,10 +221,25 @@ const CalendarApp: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Event Modal */}
-      {showAddEvent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: 99999 }}>
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] mx-4 shadow-2xl border-2 border-gray-200">
+      {/* Add Event Modal using Portal */}
+      {showAddEvent && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/70 flex items-center justify-center" 
+          style={{ zIndex: 999999 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddEvent(false);
+              setNewEvent({
+                title: '',
+                date: '',
+                time: '',
+                category: 'personal',
+                description: ''
+              });
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] mx-4 shadow-2xl border-2 border-gray-200" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-blue-600" />
               Add New Event
@@ -241,6 +257,7 @@ const CalendarApp: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter event title"
                   required
+                  autoFocus
                 />
               </div>
 
@@ -326,10 +343,12 @@ const CalendarApp: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
 };
 
 export default CalendarApp;
+
