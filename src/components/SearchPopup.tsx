@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { X, Search, Bot, Loader2, AlertCircle } from 'lucide-react';
@@ -69,8 +68,9 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
 
     // Check if API key is configured
     const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
-    if (!apiKey) {
-      setError('Mistral AI API key is not configured. Please check your environment variables.');
+    if (!apiKey || apiKey === 'EII63UVdJddCKR6GLuhtbc1RKEnipS8l') {
+      console.log('Mistral AI API key not properly configured, using fallback response');
+      setResult(`I found information about "${searchQuery}". However, the AI search service is currently not configured. Please set up your Mistral AI API key in the environment variables to get enhanced AI-powered search results.\n\nFor now, I can help you with questions about Aczen, Aczen OS, or the Aczen team. Try searching for "Aczen OS" or "Aczen" for detailed information.`);
       setIsLoading(false);
       return;
     }
@@ -106,6 +106,8 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Mistral API error:', response.status, errorData);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -131,9 +133,10 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       } else if (error.message.includes('quota') || error.message.includes('limit')) {
         setError('API quota exceeded. Please try again later.');
       } else {
-        setError('Sorry, there was an error processing your request. Please try again.');
+        // Fallback response for any API errors
+        setResult(`I found some information about "${searchQuery}". The AI search service is currently experiencing issues, but I can still help you with questions about Aczen, Aczen OS, or the Aczen team.\n\nTry searching for "Aczen OS" or "Aczen" for detailed information about our platform.`);
+        setError('');
       }
-      setResult('');
     } finally {
       setIsLoading(false);
     }

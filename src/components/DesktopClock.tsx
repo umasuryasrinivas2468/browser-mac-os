@@ -25,7 +25,6 @@ const DesktopClock: React.FC = () => {
     date: new Date().toLocaleDateString()
   });
   const [showNewsDetail, setShowNewsDetail] = useState(false);
-  const [weatherLoading, setWeatherLoading] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -35,80 +34,24 @@ const DesktopClock: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch real weather data
+  // Keep default weather data - no API calls
   useEffect(() => {
-    const fetchWeatherData = async () => {
-      try {
-        setWeatherLoading(true);
-        
-        // Get user's location
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (position) => {
-              const { latitude, longitude } = position.coords;
-              
-              try {
-                // Using OpenWeatherMap API (you'll need to replace YOUR_API_KEY with actual key)
-                const response = await fetch(
-                  `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=YOUR_API_KEY&units=metric`
-                );
-                
-                if (response.ok) {
-                  const data = await response.json();
-                  
-                  let weatherIcon = Sun;
-                  const weatherMain = data.weather[0].main.toLowerCase();
-                  
-                  if (weatherMain.includes('rain')) weatherIcon = CloudRain;
-                  else if (weatherMain.includes('cloud')) weatherIcon = Cloud;
-                  else if (weatherMain.includes('snow')) weatherIcon = CloudSnow;
-                  else if (weatherMain.includes('wind')) weatherIcon = Wind;
-                  
-                  setWeather({
-                    temp: `${Math.round(data.main.temp)}°C`,
-                    condition: data.weather[0].main,
-                    icon: weatherIcon,
-                    humidity: `${data.main.humidity}%`,
-                    windSpeed: `${Math.round(data.wind.speed * 3.6)} km/h`,
-                    visibility: `${(data.visibility / 1000).toFixed(1)} km`
-                  });
-                } else {
-                  // Fallback weather data
-                  console.log('Weather API failed, using fallback data');
-                }
-              } catch (error) {
-                console.log('Error fetching weather:', error);
-              }
-              
-              setWeatherLoading(false);
-            },
-            (error) => {
-              console.log('Geolocation error:', error);
-              setWeatherLoading(false);
-            }
-          );
-        } else {
-          setWeatherLoading(false);
-        }
-      } catch (error) {
-        console.error('Weather fetch error:', error);
-        setWeatherLoading(false);
-      }
-    };
-
-    fetchWeatherData();
-    
-    // Refresh weather every 30 minutes
-    const weatherInterval = setInterval(fetchWeatherData, 30 * 60 * 1000);
-    
-    return () => clearInterval(weatherInterval);
+    // Set default weather and keep it static
+    setWeather({
+      temp: '28°C',
+      condition: 'Sunny',
+      icon: Sun,
+      humidity: '65%',
+      windSpeed: '12 km/h',
+      visibility: '10 km'
+    });
   }, []);
 
-  // Get real calendar events from localStorage or other storage
+  // Get real calendar events from localStorage
   useEffect(() => {
     const loadTodaysEvents = () => {
       try {
-        // Get calendar events from localStorage (assuming CalendarApp saves events there)
+        // Get calendar events from localStorage
         const savedEvents = localStorage.getItem('calendar-events');
         if (savedEvents) {
           const allEvents = JSON.parse(savedEvents);
@@ -219,31 +162,25 @@ const DesktopClock: React.FC = () => {
             ? 'bg-black/30 border-white/10' 
             : 'bg-white/20 border-white/30'
         }`} style={{ width: '5cm', height: '2cm' }}>
-          {weatherLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between h-full">
-              <div className="flex items-center space-x-3">
-                <WeatherIcon className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-white'}`} />
-                <div>
-                  <div className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-white'}`}>
-                    {weather.temp}
-                  </div>
-                  <div className={`text-xs ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
-                    {weather.condition}
-                  </div>
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center space-x-3">
+              <WeatherIcon className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-white'}`} />
+              <div>
+                <div className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-white'}`}>
+                  {weather.temp}
                 </div>
-              </div>
-              <div className={`text-xs ${isDarkMode ? 'text-white/70' : 'text-white/80'}`}>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-3 h-3" />
-                  <span>{weather.visibility}</span>
+                <div className={`text-xs ${isDarkMode ? 'text-white/80' : 'text-white/90'}`}>
+                  {weather.condition}
                 </div>
               </div>
             </div>
-          )}
+            <div className={`text-xs ${isDarkMode ? 'text-white/70' : 'text-white/80'}`}>
+              <div className="flex items-center space-x-1">
+                <Eye className="w-3 h-3" />
+                <span>{weather.visibility}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Events Widget - 5CM x 3CM */}
