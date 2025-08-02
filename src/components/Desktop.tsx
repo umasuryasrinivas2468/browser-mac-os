@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
+import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
 import MenuBar from './MenuBar';
 import DesktopClock from './DesktopClock';
 import Window from './Window';
@@ -12,20 +13,9 @@ import DesktopSearchBar from './DesktopSearchBar';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
-
-  const getBackgroundClass = () => {
-    const hour = new Date(currentTime).getHours();
-    
-    if (hour >= 6 && hour < 12) {
-      return 'bg-morning';
-    } else if (hour >= 12 && hour < 18) {
-      return 'bg-afternoon';
-    } else {
-      return 'bg-evening';
-    }
-  };
-
-  const backgroundClass = getBackgroundClass();
+  
+  // Use the dynamic wallpaper hook
+  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
 
   const handleSecurityClick = () => {
     console.log('Security clicked');
