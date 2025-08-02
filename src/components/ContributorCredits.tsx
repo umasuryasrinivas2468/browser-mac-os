@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Camera, Mountain } from 'lucide-react';
 
 const ContributorCredits: React.FC = () => {
-  const { isDarkMode, setIsDockVisible } = useOS();
+  const { isDarkMode } = useOS();
   const [selectedContributor, setSelectedContributor] = useState<string | null>(null);
   const [currentTime] = useState(new Date());
 
@@ -53,26 +53,21 @@ const ContributorCredits: React.FC = () => {
 
   return (
     <>
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-20 h-16 pointer-events-none"
-        onMouseEnter={() => setIsDockVisible(true)}
-        onMouseLeave={() => setIsDockVisible(false)}
-      >
-        <div className="absolute bottom-2 right-4 pointer-events-auto">
-          <button
-            onClick={() => handleContributorClick(contributor.name)}
-            className={`text-xs px-3 py-1 rounded-full backdrop-blur-md border transition-all duration-200 hover:scale-105 ${
-              isDarkMode 
-                ? 'bg-black/30 border-white/10 text-white/80 hover:bg-black/40' 
-                : 'bg-white/30 border-black/10 text-black/80 hover:bg-white/40'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Camera className="w-3 h-3" />
-              <span>Contributor: {contributor.name}</span>
-            </div>
-          </button>
-        </div>
+      {/* Position at top center, below the time */}
+      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-20">
+        <button
+          onClick={() => handleContributorClick(contributor.name)}
+          className={`text-sm px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-200 hover:scale-105 ${
+            isDarkMode 
+              ? 'bg-black/30 border-white/10 text-white/80 hover:bg-black/40' 
+              : 'bg-white/30 border-black/10 text-black/80 hover:bg-white/40'
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            <Camera className="w-4 h-4" />
+            <span>Contributor: {contributor.name}</span>
+          </div>
+        </button>
       </div>
 
       <Dialog open={!!selectedContributor} onOpenChange={() => setSelectedContributor(null)}>
