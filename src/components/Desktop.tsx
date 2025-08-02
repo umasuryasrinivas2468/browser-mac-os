@@ -6,6 +6,8 @@ import DesktopClock from './DesktopClock';
 import Window from './Window';
 import Dock from './Dock';
 import ContributorCredits from './ContributorCredits';
+import AppLauncher from './AppLauncher';
+import DesktopSearchBar from './DesktopSearchBar';
 
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
@@ -44,7 +46,7 @@ const Desktop: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${backgroundClass}`}>
+    <div className={`min-h-screen w-full relative transition-all duration-500 ${backgroundClass}`}>
       <MenuBar 
         onSecurityClick={handleSecurityClick}
         onPopularAppsClick={handlePopularAppsClick}
@@ -52,6 +54,9 @@ const Desktop: React.FC = () => {
       />
       
       <DesktopClock />
+      
+      {/* Contributor Credits - positioned to the right */}
+      <ContributorCredits />
       
       {windows.map((window) => (
         <Window key={window.id} window={window} />
@@ -63,8 +68,11 @@ const Desktop: React.FC = () => {
         onMouseEnter={handleMouseEnterBottom}
       />
       
+      {/* Bottom Icons - App Launcher and AI Search */}
+      <AppLauncher />
+      <DesktopSearchBar />
+      
       <Dock />
-      <ContributorCredits />
     </div>
   );
 };
