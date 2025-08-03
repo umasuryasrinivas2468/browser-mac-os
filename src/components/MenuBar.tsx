@@ -1,148 +1,132 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Wifi, Battery, Volume2, Search, Shield, TrendingUp, Camera, Menu } from 'lucide-react';
+import { Wifi, Battery, Volume2, Search, Camera } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
-interface MenuBarProps {
-  onSecurityClick: () => void;
-  onPopularAppsClick: () => void;
-  onSearchClick: () => void;
-  onCameraClick?: () => void;
-}
-
-const MenuBar: React.FC<MenuBarProps> = ({ 
-  onSecurityClick, 
-  onPopularAppsClick, 
-  onSearchClick,
-  onCameraClick 
-}) => {
-  const { isDarkMode, currentTime, currentDesktop, availableDesktops, setCurrentDesktop } = useOS();
-  const [batteryLevel, setBatteryLevel] = useState(85);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+const MenuBar: React.FC = () => {
+  const { isDarkMode, isMenuBarVisible, wallpaper } = useOS();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Simulate battery level changes
-    const interval = setInterval(() => {
-      setBatteryLevel(prev => {
-        const change = Math.random() > 0.5 ? 1 : -1;
-        return Math.max(20, Math.min(100, prev + change));
-      });
-    }, 30000);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
+  const takeScreenshot = async () => {
+    try {
+      const canvas = await html2canvas(document.body, {
+        height: window.innerHeight,
+        width: window.innerWidth,
+        useCORS: true
+      });
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const fileName = `screenshot-${timestamp}.png`;
+          
+          // Save to Pictures folder in file manager
+          const existingStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
+          if (existingStructure.Home?.children?.Pictures) {
+            existingStructure.Home.children.Pictures.children[fileName] = {
+              type: 'file',
+              icon: 'Image',
+              data: blob,
+              created: new Date().toISOString()
+            };
+            localStorage.setItem('filemanager_structure', JSON.stringify(existingStructure));
+          }
+
+          // Also trigger download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+    }
+  };
+
+  if (!isMenuBarVisible) return null;
+
   return (
-    <div className={`fixed top-0 left-0 right-0 h-8 flex items-center justify-between px-2 sm:px-4 text-xs sm:text-sm z-50 backdrop-blur-md ${
+    <div className={`top-bar fixed top-0 left-0 right-0 z-40 h-8 flex items-center justify-between px-4 transition-all duration-300 ${
       isDarkMode 
-        ? 'bg-black/30 text-white border-b border-white/10' 
-        : 'bg-white/30 text-black border-b border-black/10'
+        ? 'bg-black/60 backdrop-blur-xl border-b border-white/10 text-white' 
+        : 'bg-white/60 backdrop-blur-xl border-b border-black/10 text-gray-900'
     }`}>
-      {/* Left side - App menu */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <button className="font-medium hover:bg-white/10 px-1 sm:px-2 py-1 rounded text-xs sm:text-sm">
-          AczenOS
+      {/* Left side */}
+      <div className="flex items-center space-x-4">
+        <div className="font-semibold text-sm hidden sm:block">AczenOS</div>
+      </div>
+
+      {/* Center - Search */}
+      <div className="flex-1 flex justify-center max-w-md mx-4">
+        {showSearch ? (
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => {
+                setTimeout(() => setShowSearch(false), 100);
+              }}
+              className={`search-bar w-full px-4 py-1 text-sm transition-all ${
+                isDarkMode 
+                  ? 'bg-gray-800/80 border border-gray-600 text-white placeholder-gray-400' 
+                  : 'bg-white/80 border border-gray-300 text-gray-900 placeholder-gray-500'
+              }`}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowSearch(true)}
+            className={`search-bar flex items-center space-x-2 px-4 py-1 transition-all text-sm ${
+              isDarkMode 
+                ? 'bg-gray-800/50 hover:bg-gray-800/80 border border-gray-600' 
+                : 'bg-white/50 hover:bg-white/80 border border-gray-300'
+            }`}
+          >
+            <Search className="w-3 h-3" />
+            <span className="hidden sm:inline">Search</span>
+          </button>
+        )}
+      </div>
+
+      {/* Right side */}
+      <div className="flex items-center space-x-2 sm:space-x-3">
+        <button
+          onClick={takeScreenshot}
+          className={`p-1 transition-colors ${
+            isDarkMode ? 'hover:bg-gray-800/50' : 'hover:bg-gray-200/50'
+          }`}
+          title="Take Screenshot"
+        >
+          <Camera className="w-4 h-4" />
         </button>
         
-        {/* Desktop switcher - hidden on very small screens */}
-        <div className="hidden sm:flex items-center space-x-1">
-          {availableDesktops.map((desktop) => (
-            <button
-              key={desktop}
-              onClick={() => setCurrentDesktop(desktop)}
-              className={`w-5 h-5 sm:w-6 sm:h-6 text-xs rounded ${
-                currentDesktop === desktop
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white/20 hover:bg-white/30'
-              }`}
-            >
-              {desktop}
-            </button>
-          ))}
+        <div className="hidden sm:flex items-center space-x-2">
+          <Wifi className="w-4 h-4" />
+          <Volume2 className="w-4 h-4" />
+          <Battery className="w-4 h-4" />
+        </div>
+        
+        <div className="text-sm font-medium">
+          {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
-
-      {/* Right side - System icons */}
-      <div className="flex items-center space-x-1 sm:space-x-3">
-        {/* Mobile menu button */}
-        <button
-          className="sm:hidden hover:bg-white/10 p-1 rounded transition-colors"
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-        >
-          <Menu className="w-4 h-4" />
-        </button>
-
-        {/* Desktop icons - hidden on mobile unless menu is open */}
-        <div className={`${showMobileMenu ? 'flex' : 'hidden'} sm:flex items-center space-x-1 sm:space-x-3`}>
-          <button
-            onClick={onCameraClick}
-            className="hover:bg-white/10 p-1 rounded transition-colors"
-            title="Take Screenshot"
-          >
-            <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-          
-          <button
-            onClick={onSearchClick}
-            className="hover:bg-white/10 p-1 rounded transition-colors"
-          >
-            <Search className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-          
-          <button
-            onClick={onSecurityClick}
-            className="hover:bg-white/10 p-1 rounded transition-colors"
-          >
-            <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-          
-          <button
-            onClick={onPopularAppsClick}
-            className="hover:bg-white/10 p-1 rounded transition-colors"
-          >
-            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <Wifi className="w-3 h-3 sm:w-4 sm:h-4" />
-            <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />
-            <div className="flex items-center space-x-1">
-              <Battery className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs hidden sm:inline">{batteryLevel}%</span>
-            </div>
-          </div>
-        </div>
-
-        <span className="font-mono text-xs">
-          {currentTime}
-        </span>
-      </div>
-
-      {/* Mobile dropdown menu */}
-      {showMobileMenu && (
-        <div className={`absolute top-8 right-0 w-48 rounded-lg shadow-lg border z-50 sm:hidden ${
-          isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="p-2 space-y-1">
-            {availableDesktops.map((desktop) => (
-              <button
-                key={desktop}
-                onClick={() => {
-                  setCurrentDesktop(desktop);
-                  setShowMobileMenu(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded text-sm ${
-                  currentDesktop === desktop
-                    ? 'bg-blue-500 text-white'
-                    : isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                }`}
-              >
-                Desktop {desktop}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

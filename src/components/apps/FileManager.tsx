@@ -21,7 +21,7 @@ import {
   List,
   FolderPlus
 } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
 
 const FileManager: React.FC = () => {
   const { isDarkMode } = useOS();
@@ -31,10 +31,15 @@ const FileManager: React.FC = () => {
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
   const [fileStructure, setFileStructure] = useState(() => {
     const saved = localStorage.getItem('filemanager_structure');
     if (saved) {
-      return JSON.parse(saved);
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing saved file structure:', e);
+      }
     }
 
     return {
@@ -68,10 +73,15 @@ const FileManager: React.FC = () => {
     };
   });
 
+  // Save file structure to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+  }, [fileStructure]);
+
   // Load files from TextEditor into Documents
   useEffect(() => {
     const loadTextEditorFiles = () => {
-      const textEditorFiles = {};
+      const textEditorFiles: any = {};
       
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -92,26 +102,18 @@ const FileManager: React.FC = () => {
         }
       }
 
-      // Load pictures from screenshots
-      const pictures = JSON.parse(localStorage.getItem('filemanager_pictures') || '{}');
-
-      setFileStructure(prev => {
-        const updated = { ...prev };
-        if (updated.Home?.children?.Documents) {
-          updated.Home.children.Documents.children = {
-            ...updated.Home.children.Documents.children,
-            ...textEditorFiles
-          };
-        }
-        if (updated.Home?.children?.Pictures) {
-          updated.Home.children.Pictures.children = {
-            ...updated.Home.children.Pictures.children,
-            ...pictures
-          };
-        }
-        localStorage.setItem('filemanager_structure', JSON.stringify(updated));
-        return updated;
-      });
+      if (Object.keys(textEditorFiles).length > 0) {
+        setFileStructure(prev => {
+          const updated = { ...prev };
+          if (updated.Home?.children?.Documents) {
+            updated.Home.children.Documents.children = {
+              ...updated.Home.children.Documents.children,
+              ...textEditorFiles
+            };
+          }
+          return updated;
+        });
+      }
     };
 
     loadTextEditorFiles();
@@ -120,11 +122,14 @@ const FileManager: React.FC = () => {
   const getCurrentFolder = () => {
     let current: any = fileStructure;
     for (const path of currentPath) {
-      if (current && current[path]) {
+      if (current && current[path] && current[path].children) {
+        current = current[path];
+      } else if (current && current[path]) {
         current = current[path];
       } else {
+        console.warn('Path not found, resetting to Home');
         setCurrentPath(['Home']);
-        return fileStructure['Home'].children || {};
+        return fileStructure['Home']?.children || {};
       }
     }
     return current?.children || {};
@@ -134,87 +139,85 @@ const FileManager: React.FC = () => {
     const currentFolder = getCurrentFolder();
     if (currentFolder[folderName] && currentFolder[folderName].type === 'folder') {
       setCurrentPath([...currentPath, folderName]);
+      setSelectedItems([]);
     }
   };
 
   const navigateBack = () => {
     if (currentPath.length > 1) {
       setCurrentPath(currentPath.slice(0, -1));
+      setSelectedItems([]);
     }
   };
 
   const navigateToPath = (index: number) => {
     setCurrentPath(currentPath.slice(0, index + 1));
+    setSelectedItems([]);
   };
 
   const createNewFolder = () => {
     if (!newFolderName.trim()) return;
     
-    const updateStructure = (structure: any, path: string[], folderName: string) => {
-      const updated = { ...structure };
+    setFileStructure(prev => {
+      const updated = JSON.parse(JSON.stringify(prev));
       let current = updated;
       
-      for (const pathPart of path) {
-        if (current[pathPart]) {
+      // Navigate to current path
+      for (const pathPart of currentPath) {
+        if (current[pathPart] && current[pathPart].children) {
           current = current[pathPart].children;
         }
       }
       
-      current[folderName] = {
+      // Create new folder
+      current[newFolderName] = {
         type: 'folder',
         children: {}
       };
       
       return updated;
-    };
+    });
 
-    const updatedStructure = updateStructure(fileStructure, currentPath, newFolderName);
-    setFileStructure(updatedStructure);
-    localStorage.setItem('filemanager_structure', JSON.stringify(updatedStructure));
     setShowNewFolderDialog(false);
     setNewFolderName('');
   };
 
-  // Save document as PDF
   const saveDocumentAsPDF = async (document: any) => {
     try {
-      // Create HTML content
-      const htmlContent = `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h1>${document.name}</h1>
-          <div>${document.content || 'No content available'}</div>
-        </div>
-      `;
-
-      const options = {
-        margin: 1,
-        filename: `${document.name}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-
-      const pdfBlob = await html2pdf().set(options).from(htmlContent).output('blob');
+      const pdf = new jsPDF();
+      
+      // Add title
+      pdf.setFontSize(16);
+      pdf.text(document.name, 20, 30);
+      
+      // Add content
+      pdf.setFontSize(12);
+      const lines = pdf.splitTextToSize(document.content || 'No content available', 170);
+      pdf.text(lines, 20, 50);
+      
+      // Convert to blob
+      const pdfBlob = pdf.output('blob');
       
       // Save to Documents folder
-      const updatedStructure = { ...fileStructure };
-      if (updatedStructure.Home?.children?.Documents) {
-        updatedStructure.Home.children.Documents.children[`${document.name}.pdf`] = {
-          type: 'file',
-          icon: FileText,
-          data: pdfBlob,
-          created: new Date().toISOString()
-        };
-      }
-      
-      setFileStructure(updatedStructure);
-      localStorage.setItem('filemanager_structure', JSON.stringify(updatedStructure));
+      setFileStructure(prev => {
+        const updated = JSON.parse(JSON.stringify(prev));
+        if (updated.Home?.children?.Documents) {
+          const fileName = `${document.name.replace(/\.[^/.]+$/, "")}.pdf`;
+          updated.Home.children.Documents.children[fileName] = {
+            type: 'file',
+            icon: FileText,
+            data: pdfBlob,
+            created: new Date().toISOString()
+          };
+        }
+        return updated;
+      });
       
       // Also create downloadable link
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${document.name}.pdf`;
+      a.download = `${document.name.replace(/\.[^/.]+$/, "")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       
@@ -223,7 +226,6 @@ const FileManager: React.FC = () => {
     }
   };
 
-  // Save document as DOC (HTML format with .doc extension)
   const saveDocumentAsDOC = async (document: any) => {
     try {
       const docContent = `
@@ -242,24 +244,25 @@ const FileManager: React.FC = () => {
       const blob = new Blob([docContent], { type: 'application/msword' });
       
       // Save to Documents folder
-      const updatedStructure = { ...fileStructure };
-      if (updatedStructure.Home?.children?.Documents) {
-        updatedStructure.Home.children.Documents.children[`${document.name}.doc`] = {
-          type: 'file',
-          icon: FileText,
-          data: blob,
-          created: new Date().toISOString()
-        };
-      }
-      
-      setFileStructure(updatedStructure);
-      localStorage.setItem('filemanager_structure', JSON.stringify(updatedStructure));
+      setFileStructure(prev => {
+        const updated = JSON.parse(JSON.stringify(prev));
+        if (updated.Home?.children?.Documents) {
+          const fileName = `${document.name.replace(/\.[^/.]+$/, "")}.doc`;
+          updated.Home.children.Documents.children[fileName] = {
+            type: 'file',
+            icon: FileText,
+            data: blob,
+            created: new Date().toISOString()
+          };
+        }
+        return updated;
+      });
       
       // Also create downloadable link
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${document.name}.doc`;
+      a.download = `${document.name.replace(/\.[^/.]+$/, "")}.doc`;
       a.click();
       URL.revokeObjectURL(url);
       
@@ -294,7 +297,7 @@ const FileManager: React.FC = () => {
   ];
 
   return (
-    <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+    <div className={`flex flex-col h-full window ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
       {/* Mobile/Desktop Header */}
       <div className={`flex items-center justify-between p-2 sm:p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="flex items-center space-x-2">
@@ -312,7 +315,7 @@ const FileManager: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
+            className={`rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}
           >
             {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
           </button>
@@ -376,7 +379,7 @@ const FileManager: React.FC = () => {
                 <React.Fragment key={index}>
                   <button
                     onClick={() => navigateToPath(index)}
-                    className="text-blue-500 hover:text-blue-600 truncate whitespace-nowrap text-sm"
+                    className="text-blue-500 hover:text-blue-600 truncate whitespace-nowrap text-sm rounded-md px-2 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
                     {path}
                   </button>
@@ -408,40 +411,47 @@ const FileManager: React.FC = () => {
 
           {/* File Grid */}
           <div className="flex-1 p-2 sm:p-4 overflow-auto">
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4">
+            {Object.keys(filteredFolder).length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <Folder className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>This folder is empty</p>
+                </div>
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4">
                 {Object.entries(filteredFolder).map(([name, item]: [string, any]) => (
-                  <button
+                  <div
                     key={name}
-                    onDoubleClick={() => {
-                      if (item.type === 'folder') {
-                        navigateToFolder(name);
-                      }
-                    }}
-                    className={`flex flex-col items-center space-y-1 sm:space-y-2 p-2 sm:p-3 rounded-lg transition-colors ${
+                    className={`flex flex-col items-center space-y-2 p-3 rounded-lg transition-all cursor-pointer ${
                       selectedItems.includes(name)
-                        ? 'bg-blue-100 border-2 border-blue-500'
+                        ? 'bg-blue-100 border-2 border-blue-500 dark:bg-blue-900/30'
                         : isDarkMode
                         ? 'hover:bg-gray-700'
                         : 'hover:bg-gray-50'
                     }`}
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        navigateToFolder(name);
+                      }
+                    }}
                   >
                     {item.type === 'folder' ? (
-                      <Folder className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-blue-500" />
+                      <Folder className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" />
                     ) : (
-                      <item.icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-500" />
+                      <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-gray-500" />
                     )}
                     <span className="text-xs sm:text-sm text-center break-words max-w-full line-clamp-2">
                       {name}
                     </span>
                     {item.content && (
-                      <div className="flex space-x-1 mt-1">
+                      <div className="flex flex-col sm:flex-row gap-1 mt-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             saveDocumentAsPDF({ name: name.replace(/\.[^/.]+$/, ""), content: item.content });
                           }}
-                          className="text-xs bg-red-500 text-white px-2 py-1 rounded"
+                          className="text-xs bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
                         >
                           PDF
                         </button>
@@ -450,13 +460,13 @@ const FileManager: React.FC = () => {
                             e.stopPropagation();
                             saveDocumentAsDOC({ name: name.replace(/\.[^/.]+$/, ""), content: item.content });
                           }}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600"
                         >
                           DOC
                         </button>
                       </div>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -464,23 +474,23 @@ const FileManager: React.FC = () => {
                 {Object.entries(filteredFolder).map(([name, item]: [string, any]) => (
                   <div
                     key={name}
-                    onDoubleClick={() => {
-                      if (item.type === 'folder') {
-                        navigateToFolder(name);
-                      }
-                    }}
-                    className={`flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer ${
+                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer ${
                       selectedItems.includes(name)
-                        ? 'bg-blue-100 border-2 border-blue-500'
+                        ? 'bg-blue-100 border-2 border-blue-500 dark:bg-blue-900/30'
                         : isDarkMode
                         ? 'hover:bg-gray-700'
                         : 'hover:bg-gray-50'
                     }`}
+                    onClick={() => {
+                      if (item.type === 'folder') {
+                        navigateToFolder(name);
+                      }
+                    }}
                   >
                     {item.type === 'folder' ? (
                       <Folder className="w-6 h-6 text-blue-500 flex-shrink-0" />
                     ) : (
-                      <item.icon className="w-6 h-6 text-gray-500 flex-shrink-0" />
+                      <FileText className="w-6 h-6 text-gray-500 flex-shrink-0" />
                     )}
                     <span className="flex-1 text-sm truncate">{name}</span>
                     {item.content && (
@@ -490,7 +500,7 @@ const FileManager: React.FC = () => {
                             e.stopPropagation();
                             saveDocumentAsPDF({ name: name.replace(/\.[^/.]+$/, ""), content: item.content });
                           }}
-                          className="text-xs bg-red-500 text-white px-2 py-1 rounded"
+                          className="text-xs bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
                         >
                           PDF
                         </button>
@@ -499,7 +509,7 @@ const FileManager: React.FC = () => {
                             e.stopPropagation();
                             saveDocumentAsDOC({ name: name.replace(/\.[^/.]+$/, ""), content: item.content });
                           }}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600"
                         >
                           DOC
                         </button>
@@ -516,7 +526,7 @@ const FileManager: React.FC = () => {
       {/* New Folder Dialog */}
       {showNewFolderDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`w-full max-w-md p-6 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`dialog w-full max-w-md p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <h3 className="text-lg font-semibold mb-4">Create New Folder</h3>
             <input
               type="text"
@@ -537,7 +547,7 @@ const FileManager: React.FC = () => {
                   setShowNewFolderDialog(false);
                   setNewFolderName('');
                 }}
-                className="px-4 py-2 text-gray-500 hover:text-gray-700"
+                className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg"
               >
                 Cancel
               </button>

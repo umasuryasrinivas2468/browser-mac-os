@@ -55,3 +55,13 @@ input, textarea {
     font-size: 0.75rem;
   }
 }
+
+/* Universal corner radius for UI elements */
+.dock, .app-icon, .top-bar, .search-bar, .window, .dialog, .menu {
+  border-radius: 12px;
+}
+
+/* Additional rounded corners for specific elements */
+.rounded-ui {
+  border-radius: 12px;
+}
