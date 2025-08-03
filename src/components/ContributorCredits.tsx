@@ -53,8 +53,8 @@ const ContributorCredits: React.FC = () => {
 
   return (
     <>
-      {/* Position at top center, below the time */}
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-20">
+      {/* Position at top right, below the menu bar */}
+      <div className="fixed top-20 right-8 z-20">
         <button
           onClick={() => handleContributorClick(contributor.name)}
           className={`text-sm px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-200 hover:scale-105 ${
