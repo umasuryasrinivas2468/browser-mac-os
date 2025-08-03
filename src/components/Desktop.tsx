@@ -6,9 +6,10 @@ import MenuBar from './MenuBar';
 import DesktopClock from './DesktopClock';
 import Window from './Window';
 import Dock from './Dock';
-import ContributorCredits from './ContributorCredits';
+import WallpaperCredits from './WallpaperCredits';
 import AppLauncher from './AppLauncher';
 import DesktopSearchBar from './DesktopSearchBar';
+import CopyProtection from './CopyProtection';
 
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
@@ -37,6 +38,9 @@ const Desktop: React.FC = () => {
 
   return (
     <div className={`min-h-screen w-full relative transition-all duration-500 ${backgroundClass}`}>
+      {/* Copy Protection */}
+      <CopyProtection />
+      
       <MenuBar 
         onSecurityClick={handleSecurityClick}
         onPopularAppsClick={handlePopularAppsClick}
@@ -45,8 +49,8 @@ const Desktop: React.FC = () => {
       
       <DesktopClock />
       
-      {/* Contributor Credits - positioned to the right */}
-      <ContributorCredits />
+      {/* Wallpaper Credits - positioned at bottom left corner */}
+      <WallpaperCredits />
       
       {windows.map((window) => (
         <Window key={window.id} window={window} />

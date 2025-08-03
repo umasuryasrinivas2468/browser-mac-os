@@ -175,3 +175,69 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.5);
 }
+
+/* Window animations */
+@keyframes window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-window-open {
+  animation: window-open 0.3s ease-out;
+}
+
+/* Improved app window styling */
+.app-window {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Disable text selection for better UX */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Copy protection styles */
+body.copy-protected {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Wallpaper credits - ensure they never interfere */
+.wallpaper-credits {
+  pointer-events: auto;
+  z-index: -1;
+  position: fixed;
+  bottom: 4px;
+  left: 4px;
+}
+
+.wallpaper-credits:hover {
+  z-index: 1;
+}
+
+/* Hide wallpaper credits when windows are open */
+body:has(.window-open) .wallpaper-credits {
+  opacity: 0.3;
+  pointer-events: auto;
+}
+
+body:has(.window-open) .wallpaper-credits:hover {
+  opacity: 0.6;
+  pointer-events: auto;
+}

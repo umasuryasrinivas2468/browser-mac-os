@@ -85,16 +85,46 @@ const SettingsApp: React.FC = () => {
   );
 
   // Real system information
-  const getSystemInfo = () => ({
-    processor: 'Intel Core i7-12700K',
-    ram: '16 GB DDR4',
-    storage: '512 GB SSD',
-    graphics: 'NVIDIA RTX 3070',
-    os: 'Aczen OS v2.1.0',
-    build: new Date().toLocaleDateString(),
-    uptime: '2 days, 14 hours',
-    resolution: `${window.innerWidth} × ${window.innerHeight}`
-  });
+  const getSystemInfo = () => {
+    const now = new Date();
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const language = navigator.language;
+    const cookieEnabled = navigator.cookieEnabled;
+    const onlineStatus = navigator.onLine;
+    
+    // Detect browser
+    let browserName = 'Unknown';
+    if (userAgent.includes('Chrome')) browserName = 'Chrome';
+    else if (userAgent.includes('Firefox')) browserName = 'Firefox';
+    else if (userAgent.includes('Safari')) browserName = 'Safari';
+    else if (userAgent.includes('Edge')) browserName = 'Edge';
+    
+    // Detect OS
+    let osName = 'Unknown';
+    if (platform.includes('Win')) osName = 'Windows';
+    else if (platform.includes('Mac')) osName = 'macOS';
+    else if (platform.includes('Linux')) osName = 'Linux';
+    else if (userAgent.includes('Android')) osName = 'Android';
+    else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) osName = 'iOS';
+    
+    return {
+      processor: `${browserName} Engine`,
+      ram: `${Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024 || 16)} MB Used`,
+      storage: `${Math.round((navigator.storage?.estimate ? 0 : 512))} GB Available`,
+      graphics: `${osName} Graphics`,
+      os: `Aczen OS v2.1.0 (${osName})`,
+      build: now.toLocaleDateString(),
+      uptime: `${Math.floor(performance.now() / 1000 / 60)} minutes`,
+      resolution: `${window.innerWidth} × ${window.innerHeight}`,
+      browser: browserName,
+      platform: platform,
+      language: language,
+      cookieEnabled: cookieEnabled,
+      onlineStatus: onlineStatus,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+  };
 
   const systemInfo = getSystemInfo();
 
@@ -108,12 +138,12 @@ const SettingsApp: React.FC = () => {
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Appearance</h3>
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 lg:p-4 rounded-lg gap-3 sm:gap-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                 <div className="flex items-center space-x-3">
-                  {isDarkMode ? <Moon className="w-5 h-5 text-blue-400" /> : <Sun className="w-5 h-5 text-yellow-500" />}
+                  {isDarkMode ? <Moon className="w-4 h-4 lg:w-5 lg:h-5 text-blue-400" /> : <Sun className="w-4 h-4 lg:w-5 lg:h-5 text-yellow-500" />}
                   <div>
-                    <span className={`text-base font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Dark Mode</span>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span className={`text-sm lg:text-base font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Dark Mode</span>
+                    <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Switch between light and dark themes
                     </p>
                   </div>
@@ -121,14 +151,14 @@ const SettingsApp: React.FC = () => {
                 <ToggleSwitch enabled={isDarkMode} onChange={() => setIsDarkMode(!isDarkMode)} />
               </div>
               
-              <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <div className={`p-3 lg:p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                <label className={`block text-xs lg:text-sm font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Font Size
                 </label>
                 <select 
                   value={systemSettings.fontSize}
                   onChange={(e) => updateSetting('fontSize', e.target.value)}
-                  className={`w-full px-3 py-2 rounded-md border transition-colors ${
+                  className={`w-full px-2 lg:px-3 py-1.5 lg:py-2 text-sm lg:text-base rounded-md border transition-colors ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
                       : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
@@ -163,12 +193,12 @@ const SettingsApp: React.FC = () => {
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Audio</h3>
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 lg:p-4 rounded-lg gap-3 sm:gap-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                 <div className="flex items-center space-x-3">
-                  <Volume2 className="w-5 h-5 text-blue-500" />
+                  <Volume2 className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500" />
                   <div>
-                    <span className={`text-base font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>System Sounds</span>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span className={`text-sm lg:text-base font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>System Sounds</span>
+                    <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Play sounds for notifications and system events
                     </p>
                   </div>
@@ -290,104 +320,142 @@ const SettingsApp: React.FC = () => {
         <div className="space-y-6">
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Device Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Cpu className="w-5 h-5 text-blue-500" />
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Processor</span>
+                  <Cpu className="w-4 h-4 lg:w-5 lg:h-5 text-blue-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Browser Engine</span>
                 </div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.processor}</p>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.processor}</p>
                 <div className="mt-2">
                   <div className="flex justify-between text-xs mb-1">
-                    <span>CPU Usage</span>
+                    <span>Usage</span>
                     <span>{systemSettings.cpuUsage}%</span>
                   </div>
-                  <div className={`w-full bg-gray-300 rounded-full h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
+                  <div className={`w-full bg-gray-300 rounded-full h-1.5 lg:h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
                     <div 
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                      className="bg-blue-500 h-1.5 lg:h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${systemSettings.cpuUsage}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <div className="flex items-center space-x-3 mb-2">
-                  <HardDrive className="w-5 h-5 text-green-500" />
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Storage</span>
+                  <HardDrive className="w-4 h-4 lg:w-5 lg:h-5 text-green-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Storage</span>
                 </div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.storage}</p>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.storage}</p>
                 <div className="mt-2">
                   <div className="flex justify-between text-xs mb-1">
                     <span>Used</span>
                     <span>{systemSettings.storageUsed}%</span>
                   </div>
-                  <div className={`w-full bg-gray-300 rounded-full h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
+                  <div className={`w-full bg-gray-300 rounded-full h-1.5 lg:h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
                     <div 
-                      className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                      className="bg-green-500 h-1.5 lg:h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${systemSettings.storageUsed}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Battery className="w-5 h-5 text-yellow-500" />
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Battery</span>
+                  <Battery className="w-4 h-4 lg:w-5 lg:h-5 text-yellow-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>System Health</span>
                 </div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemSettings.batteryLevel}% • Good Health</p>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemSettings.batteryLevel}% • Excellent</p>
                 <div className="mt-2">
-                  <div className={`w-full bg-gray-300 rounded-full h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
+                  <div className={`w-full bg-gray-300 rounded-full h-1.5 lg:h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
                     <div 
-                      className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+                      className="bg-yellow-500 h-1.5 lg:h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${systemSettings.batteryLevel}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
 
-              <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Monitor className="w-5 h-5 text-purple-500" />
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Memory</span>
+                  <Monitor className="w-4 h-4 lg:w-5 lg:h-5 text-purple-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Memory</span>
                 </div>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.ram}</p>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.ram}</p>
                 <div className="mt-2">
                   <div className="flex justify-between text-xs mb-1">
                     <span>Used</span>
                     <span>{systemSettings.memoryUsage}%</span>
                   </div>
-                  <div className={`w-full bg-gray-300 rounded-full h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
+                  <div className={`w-full bg-gray-300 rounded-full h-1.5 lg:h-2 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
                     <div 
-                      className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                      className="bg-purple-500 h-1.5 lg:h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${systemSettings.memoryUsage}%` }}
                     ></div>
                   </div>
+                </div>
+              </div>
+
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center space-x-3 mb-2">
+                  <Globe className="w-4 h-4 lg:w-5 lg:h-5 text-indigo-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Network</span>
+                </div>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {systemInfo.onlineStatus ? 'Connected' : 'Offline'}
+                </p>
+                <div className="mt-1">
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    {systemInfo.timezone}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center space-x-3 mb-2">
+                  <Settings className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Platform</span>
+                </div>
+                <p className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.platform}</p>
+                <div className="mt-1">
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    {systemInfo.language}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Software</h3>
-            <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Aczen OS</span>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>v2.1.0</span>
+            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Software Information</h3>
+            <div className={`p-3 lg:p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Aczen OS</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.os}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Build Date</span>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.build}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Browser</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.browser}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Uptime</span>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.uptime}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Build Date</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.build}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Last Update</span>
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{currentTime}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Session Time</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.uptime}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Resolution</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{systemInfo.resolution}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between">
+                  <span className={`font-medium text-sm lg:text-base ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Cookies</span>
+                  <span className={`text-xs lg:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {systemInfo.cookieEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -423,7 +491,7 @@ const SettingsApp: React.FC = () => {
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 fixed lg:relative z-50 lg:z-auto
-        w-80 h-full border-r transition-all duration-300 ease-in-out
+        w-72 sm:w-80 h-full border-r transition-all duration-300 ease-in-out
         ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}
       `}>
         <div className="p-6">

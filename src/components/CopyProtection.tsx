@@ -2,6 +2,9 @@ import React, { useEffect } from 'react';
 
 const CopyProtection: React.FC = () => {
   useEffect(() => {
+    // Add copy protection class to body
+    document.body.classList.add('copy-protected');
+    
     // Disable right-click context menu
     const disableRightClick = (e: MouseEvent) => {
       e.preventDefault();
@@ -128,6 +131,7 @@ const CopyProtection: React.FC = () => {
 
     // Cleanup function
     return () => {
+      document.body.classList.remove('copy-protected');
       document.removeEventListener('contextmenu', disableRightClick);
       document.removeEventListener('keydown', disableKeyboardShortcuts);
       document.removeEventListener('selectstart', disableSelection);

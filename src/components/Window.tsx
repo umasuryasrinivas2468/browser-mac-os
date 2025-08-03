@@ -61,12 +61,12 @@ const Window: React.FC<WindowProps> = ({ window }) => {
   return (
     <div
       ref={windowRef}
-      className={`fixed animate-window-open shadow-2xl overflow-hidden ${
-        window.isMaximized ? 'rounded-none' : 'rounded-xl'
+      className={`window-open fixed animate-window-open shadow-2xl overflow-hidden ${
+        window.isMaximized ? 'rounded-none' : 'app-window'
       } ${
         isDarkMode 
-          ? 'bg-gray-800 border border-gray-700' 
-          : 'bg-white border border-gray-200'
+          ? 'bg-gray-800/95 border border-gray-700/50' 
+          : 'bg-white/95 border border-gray-200/50'
       }`}
       style={{
         left: window.isMaximized ? 0 : window.position.x,
@@ -83,8 +83,8 @@ const Window: React.FC<WindowProps> = ({ window }) => {
           window.isMaximized ? 'cursor-default' : 'cursor-move'
         } ${
           isDarkMode 
-            ? 'bg-gray-700 border-b border-gray-600' 
-            : 'bg-gray-50 border-b border-gray-200'
+            ? 'bg-gray-700/90 border-b border-gray-600/50 backdrop-blur-sm' 
+            : 'bg-gray-50/90 border-b border-gray-200/50 backdrop-blur-sm'
         }`}
         onMouseDown={handleMouseDown}
       >

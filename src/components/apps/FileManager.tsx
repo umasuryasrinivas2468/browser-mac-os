@@ -91,16 +91,16 @@ const FileManager: React.FC = () => {
   ];
 
   return (
-    <div className={`flex h-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+    <div className={`flex flex-col lg:flex-row h-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
       {/* Sidebar */}
-      <div className={`w-64 border-r p-4 ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-        <h3 className="font-semibold mb-4">Favorites</h3>
-        <div className="space-y-1">
+      <div className={`w-full lg:w-64 border-b lg:border-b-0 lg:border-r p-2 lg:p-4 ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+        <h3 className="font-semibold mb-2 lg:mb-4 text-sm lg:text-base">Favorites</h3>
+        <div className="flex lg:flex-col space-x-2 lg:space-x-0 lg:space-y-1 overflow-x-auto lg:overflow-x-visible">
           {sidebarItems.map((item) => (
             <button
               key={item.name}
               onClick={() => setCurrentPath(item.path)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              className={`flex-shrink-0 lg:w-full flex items-center space-x-2 lg:space-x-3 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-left transition-colors text-sm lg:text-base ${
                 JSON.stringify(currentPath) === JSON.stringify(item.path)
                   ? 'bg-blue-500 text-white'
                   : isDarkMode
@@ -108,35 +108,35 @@ const FileManager: React.FC = () => {
                   : 'hover:bg-gray-100 text-gray-700'
               }`}
             >
-              <item.icon className="w-4 h-4" />
-              <span>{item.name}</span>
+              <item.icon className="w-3 h-3 lg:w-4 lg:h-4" />
+              <span className="whitespace-nowrap lg:whitespace-normal">{item.name}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Breadcrumb */}
-        <div className={`flex items-center space-x-2 p-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`flex items-center space-x-1 lg:space-x-2 p-2 lg:p-4 border-b overflow-x-auto ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           {currentPath.map((path, index) => (
             <React.Fragment key={index}>
               <button
                 onClick={() => navigateToPath(index)}
-                className="text-blue-500 hover:text-blue-600"
+                className="text-blue-500 hover:text-blue-600 text-sm lg:text-base whitespace-nowrap"
               >
                 {path}
               </button>
               {index < currentPath.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-3 h-3 lg:w-4 lg:h-4 text-gray-400 flex-shrink-0" />
               )}
             </React.Fragment>
           ))}
         </div>
 
         {/* File Grid */}
-        <div className="flex-1 p-4 overflow-auto">
-          <div className="grid grid-cols-6 gap-4">
+        <div className="flex-1 p-2 lg:p-4 overflow-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 lg:gap-4">
             {Object.entries(currentFolder).map(([name, item]: [string, any]) => (
               <button
                 key={name}
@@ -145,7 +145,7 @@ const FileManager: React.FC = () => {
                     navigateToFolder(name);
                   }
                 }}
-                className={`flex flex-col items-center space-y-2 p-3 rounded-lg transition-colors ${
+                className={`flex flex-col items-center space-y-1 lg:space-y-2 p-2 lg:p-3 rounded-lg transition-colors ${
                   selectedItems.includes(name)
                     ? 'bg-blue-100 border-2 border-blue-500'
                     : isDarkMode
@@ -154,11 +154,11 @@ const FileManager: React.FC = () => {
                 }`}
               >
                 {item.type === 'folder' ? (
-                  <Folder className="w-12 h-12 text-blue-500" />
+                  <Folder className="w-8 h-8 lg:w-12 lg:h-12 text-blue-500" />
                 ) : (
-                  <item.icon className="w-12 h-12 text-gray-500" />
+                  <item.icon className="w-8 h-8 lg:w-12 lg:h-12 text-gray-500" />
                 )}
-                <span className="text-sm text-center break-words max-w-full">{name}</span>
+                <span className="text-xs lg:text-sm text-center break-words max-w-full leading-tight">{name}</span>
               </button>
             ))}
           </div>
