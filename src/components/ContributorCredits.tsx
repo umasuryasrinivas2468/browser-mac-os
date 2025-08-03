@@ -1,22 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Camera, Mountain } from 'lucide-react';
 
 const ContributorCredits: React.FC = () => {
-  const { isDarkMode, windows } = useOS();
+  const { isDarkMode } = useOS();
   const [selectedContributor, setSelectedContributor] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update time every minute to check for wallpaper changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
+  const [currentTime] = useState(new Date());
 
   // Determine which contributor to show based on time
   const getContributor = () => {
@@ -60,13 +51,10 @@ const ContributorCredits: React.FC = () => {
 
   const contributorInfo = selectedContributor ? getContributorInfo(selectedContributor) : null;
 
-  // Don't show contributor when windows are open to avoid interference
-  if (windows.length > 0) return null;
-
   return (
     <>
       {/* Position at top right, below the menu bar */}
-      <div className="fixed top-20 right-8 z-10">
+      <div className="fixed top-20 right-8 z-20">
         <button
           onClick={() => handleContributorClick(contributor.name)}
           className={`text-sm px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-200 hover:scale-105 ${

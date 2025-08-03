@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
 import MenuBar from './MenuBar';
 import DesktopClock from './DesktopClock';
 import Window from './Window';
@@ -13,19 +12,32 @@ import DesktopSearchBar from './DesktopSearchBar';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Update current date every minute to trigger wallpaper changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 60000); // Update every minute
 
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Use the dynamic wallpaper hook with current date
-  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(currentDate);
+  const getBackgroundClass = () => {
+    const hour = new Date(currentTime).getHours();
+    
+    if (hour >= 6 && hour < 12) {
+      return 'bg-morning';
+    } else if (hour >= 12 && hour < 18) {
+      return 'bg-afternoon';
+    } else {
+      return 'bg-evening';
+    }
+  };
+
+  const backgroundClass = getBackgroundClass();
+
+  const handleSecurityClick = () => {
+    console.log('Security clicked');
+  };
+
+  const handlePopularAppsClick = () => {
+    console.log('Popular apps clicked');
+  };
+
+  const handleSearchClick = () => {
+    console.log('Search clicked');
+  };
 
   const handleMouseEnterBottom = () => {
     if (!isDockVisible) {
@@ -33,31 +45,17 @@ const Desktop: React.FC = () => {
     }
   };
 
-  // Force re-render every minute to ensure wallpaper changes
-  useEffect(() => {
-    const forceUpdate = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 60000);
-    
-    return () => clearInterval(forceUpdate);
-  }, []);
-
   return (
-    <div 
-      className={`min-h-screen w-full relative transition-all duration-1000 wallpaper-background rounded-3xl overflow-hidden`}
-      style={{
-        backgroundImage: `url(${currentWallpaper})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-      key={currentWallpaper} // Force re-render when wallpaper changes
-    >
-      <MenuBar />
+    <div className={`min-h-screen w-full relative transition-all duration-500 ${backgroundClass}`}>
+      <MenuBar 
+        onSecurityClick={handleSecurityClick}
+        onPopularAppsClick={handlePopularAppsClick}
+        onSearchClick={handleSearchClick}
+      />
       
       <DesktopClock />
       
+      {/* Contributor Credits - positioned to the right */}
       <ContributorCredits />
       
       {windows.map((window) => (

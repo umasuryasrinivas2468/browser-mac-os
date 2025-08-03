@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -133,7 +134,7 @@ const Dock: React.FC = () => {
     <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30 transition-all duration-300 ${
       isDockVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
     }`}>
-      <div className={`dock flex items-center space-x-2 py-2 px-3 transition-all duration-300 h-14 ${
+      <div className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-all duration-300 h-14 ${
         isDarkMode 
           ? 'bg-black/40 backdrop-blur-xl border border-white/10' 
           : 'bg-white/40 backdrop-blur-xl border border-black/10'
@@ -143,7 +144,7 @@ const Dock: React.FC = () => {
             <button
               onClick={() => handleAppClick(app)}
               className={`
-                app-icon w-10 h-10 ${app.color} flex items-center justify-center 
+                w-10 h-10 rounded-md ${app.color} flex items-center justify-center 
                 transition-all duration-200 hover:scale-110 hover:-translate-y-1 
                 active:scale-95 shadow-md group relative
               `}
@@ -151,7 +152,7 @@ const Dock: React.FC = () => {
             >
               <app.icon className="w-5 h-5 text-white" />
               <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 
-                            bg-black/75 text-white text-xs py-1 px-2 rounded-lg 
+                            bg-black/75 text-white text-xs py-1 px-2 rounded 
                             opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {app.title}
               </div>
