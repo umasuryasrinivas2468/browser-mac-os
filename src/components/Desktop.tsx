@@ -50,7 +50,13 @@ const Desktop: React.FC = () => {
     try {
       // Use html2canvas to capture the screen
       const html2canvas = await import('html2canvas');
-      const canvas = await html2canvas.default(document.body);
+      const canvas = await html2canvas.default(document.body, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 0.5,
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
       
       // Convert to blob and save
       canvas.toBlob((blob) => {
@@ -58,9 +64,28 @@ const Desktop: React.FC = () => {
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
           const filename = `screenshot-${timestamp}.png`;
           
-          // Save to localStorage (simulating Pictures folder)
+          // Convert blob to base64 and save to localStorage
           const reader = new FileReader();
           reader.onload = () => {
+            const existingStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
+            if (!existingStructure.Home?.children?.Pictures) {
+              if (!existingStructure.Home) existingStructure.Home = { type: 'folder', children: {} };
+              if (!existingStructure.Home.children) existingStructure.Home.children = {};
+              if (!existingStructure.Home.children.Pictures) {
+                existingStructure.Home.children.Pictures = { type: 'folder', children: {} };
+              }
+            }
+            
+            existingStructure.Home.children.Pictures.children[filename] = {
+              type: 'file',
+              icon: 'Image',
+              data: reader.result,
+              created: new Date().toISOString()
+            };
+            
+            localStorage.setItem('filemanager_structure', JSON.stringify(existingStructure));
+            
+            // Also save separately for easier access
             const existingPictures = JSON.parse(localStorage.getItem('filemanager_pictures') || '{}');
             existingPictures[filename] = {
               type: 'file',
@@ -72,21 +97,32 @@ const Desktop: React.FC = () => {
           };
           reader.readAsDataURL(blob);
         }
-      });
+      }, 'image/png');
     } catch (error) {
       console.error('Failed to take screenshot:', error);
     }
   };
 
+  // Force re-render every minute to ensure wallpaper changes
+  useEffect(() => {
+    const forceUpdate = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000);
+    
+    return () => clearInterval(forceUpdate);
+  }, []);
+
   return (
     <div 
-      className="min-h-screen w-full relative transition-all duration-500"
+      className={`min-h-screen w-full relative transition-all duration-1000 wallpaper-background`}
       style={{
         backgroundImage: `url(${currentWallpaper})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
       }}
+      key={currentWallpaper} // Force re-render when wallpaper changes
     >
       <MenuBar 
         onSecurityClick={handleSecurityClick}
