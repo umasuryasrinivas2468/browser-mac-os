@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
   Folder, 
@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 interface FileItem {
   type: 'file' | 'folder';
   children?: { [key: string]: FileItem };
+  content?: string;
+  savedAt?: string;
 }
 
 const FileManager: React.FC = () => {
@@ -86,6 +88,24 @@ const FileManager: React.FC = () => {
       }
     }
   });
+
+  // Load file structure from localStorage on component mount
+  useEffect(() => {
+    const savedStructure = localStorage.getItem('filemanager_structure');
+    if (savedStructure) {
+      try {
+        const parsed = JSON.parse(savedStructure);
+        setFileStructure(parsed);
+      } catch (e) {
+        console.error('Error parsing file structure:', e);
+      }
+    }
+  }, []);
+
+  // Save file structure to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+  }, [fileStructure]);
 
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();

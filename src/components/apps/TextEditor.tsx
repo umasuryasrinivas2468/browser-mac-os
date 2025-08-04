@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { FileText, Upload, Save, Download, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { FileText, Upload, Save, Download, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, FileDown } from 'lucide-react';
 
 const TextEditor: React.FC = () => {
   const { isDarkMode } = useOS();
@@ -11,6 +10,74 @@ const TextEditor: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const saveToDownloads = (fileName: string, content: string, type: 'text' | 'file') => {
+    // Get existing file structure from localStorage
+    const existingStructure = localStorage.getItem('filemanager_structure');
+    let fileStructure = existingStructure ? JSON.parse(existingStructure) : {
+      'Home': {
+        type: 'folder',
+        children: {
+          'Desktop': { type: 'folder', children: {} },
+          'Documents': { type: 'folder', children: {} },
+          'Downloads': { type: 'folder', children: {} },
+          'Pictures': { type: 'folder', children: {} },
+          'Music': { type: 'folder', children: {} },
+          'Videos': { type: 'folder', children: {} }
+        }
+      }
+    };
+
+    // Ensure Downloads folder exists
+    if (!fileStructure.Home.children.Downloads) {
+      fileStructure.Home.children.Downloads = { type: 'folder', children: {} };
+    }
+
+    // Add the file to Downloads
+    fileStructure.Home.children.Downloads.children[fileName] = { 
+      type: 'file',
+      content: content,
+      savedAt: new Date().toISOString()
+    };
+
+    // Save updated structure
+    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    
+    // Also save individual file data for TextEditor compatibility
+    localStorage.setItem(`texteditor_${fileName}`, JSON.stringify({
+      name: fileName,
+      type: type,
+      created: new Date().toISOString(),
+      content: content
+    }));
+  };
+
+  const handleSaveAsPDF = () => {
+    if (currentFile && editorRef.current) {
+      const content = editorRef.current.innerHTML;
+      const pdfFileName = currentFile.replace(/\.[^/.]+$/, '') + '.pdf';
+      
+      // Create a simple PDF-like content (in real app, you'd use a PDF library)
+      const pdfContent = editorRef.current.innerText;
+      
+      saveToDownloads(pdfFileName, pdfContent, 'file');
+      
+      // Show success message
+      alert(`File saved as ${pdfFileName} in Downloads folder!`);
+    }
+  };
+
+  const handleSaveAsDOC = () => {
+    if (currentFile && editorRef.current) {
+      const content = editorRef.current.innerHTML;
+      const docFileName = currentFile.replace(/\.[^/.]+$/, '') + '.docx';
+      
+      saveToDownloads(docFileName, content, 'file');
+      
+      // Show success message
+      alert(`File saved as ${docFileName} in Downloads folder!`);
+    }
+  };
 
   const handleNewDocument = () => {
     const newFileName = `document_${Date.now()}.txt`;
@@ -188,6 +255,30 @@ const TextEditor: React.FC = () => {
               >
                 <Save className="w-4 h-4" />
                 <span className="hidden sm:inline">Save</span>
+              </button>
+
+              <button
+                onClick={handleSaveAsDOC}
+                className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                  isDarkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                <FileDown className="w-4 h-4" />
+                <span className="hidden sm:inline">Save as DOC</span>
+              </button>
+
+              <button
+                onClick={handleSaveAsPDF}
+                className={`flex items-center space-x-1 px-2 md:px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                  isDarkMode 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
+              >
+                <FileDown className="w-4 h-4" />
+                <span className="hidden sm:inline">Save as PDF</span>
               </button>
 
               <button
