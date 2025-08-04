@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 
 interface FileItem {
   type: 'file' | 'folder';
-  icon?: any;
   children?: { [key: string]: FileItem };
 }
 
@@ -42,51 +41,65 @@ const FileManager: React.FC = () => {
         'Desktop': {
           type: 'folder' as const,
           children: {
-            'README.txt': { type: 'file' as const, icon: File },
-            'Shortcut.lnk': { type: 'file' as const, icon: File }
+            'README.txt': { type: 'file' as const },
+            'Shortcut.lnk': { type: 'file' as const }
           }
         },
         'Documents': {
           type: 'folder' as const,
           children: {
-            'Resume.pdf': { type: 'file' as const, icon: File },
-            'Project Report.docx': { type: 'file' as const, icon: File },
-            'Presentation.pptx': { type: 'file' as const, icon: File }
+            'Resume.pdf': { type: 'file' as const },
+            'Project Report.docx': { type: 'file' as const },
+            'Presentation.pptx': { type: 'file' as const }
           }
         },
         'Downloads': {
           type: 'folder' as const,
           children: {
-            'installer.dmg': { type: 'file' as const, icon: File },
-            'photo.jpg': { type: 'file' as const, icon: Image },
-            'song.mp3': { type: 'file' as const, icon: Music }
+            'installer.dmg': { type: 'file' as const },
+            'photo.jpg': { type: 'file' as const },
+            'song.mp3': { type: 'file' as const }
           }
         },
         'Pictures': {
           type: 'folder' as const,
           children: {
-            'vacation.jpg': { type: 'file' as const, icon: Image },
-            'family.png': { type: 'file' as const, icon: Image },
-            'screenshot.png': { type: 'file' as const, icon: Image }
+            'vacation.jpg': { type: 'file' as const },
+            'family.png': { type: 'file' as const },
+            'screenshot.png': { type: 'file' as const }
           }
         },
         'Music': {
           type: 'folder' as const,
           children: {
-            'playlist.m3u': { type: 'file' as const, icon: Music },
-            'favorite-song.mp3': { type: 'file' as const, icon: Music }
+            'playlist.m3u': { type: 'file' as const },
+            'favorite-song.mp3': { type: 'file' as const }
           }
         },
         'Videos': {
           type: 'folder' as const,
           children: {
-            'movie.mp4': { type: 'file' as const, icon: Video },
-            'tutorial.mov': { type: 'file' as const, icon: Video }
+            'movie.mp4': { type: 'file' as const },
+            'tutorial.mov': { type: 'file' as const }
           }
         }
       }
     }
   });
+
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
+      return Image;
+    } else if (['mp3', 'wav', 'flac', 'm3u'].includes(extension || '')) {
+      return Music;
+    } else if (['mp4', 'avi', 'mov', 'wmv', 'flv'].includes(extension || '')) {
+      return Video;
+    }
+    
+    return File;
+  };
 
   const getCurrentFolder = () => {
     let current: any = fileStructure;
@@ -213,7 +226,7 @@ const FileManager: React.FC = () => {
               placeholder="Search files..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-48 rounded-lg"
+              className="pl-8 w-32 sm:w-48 rounded-lg"
             />
           </div>
           
@@ -240,25 +253,28 @@ const FileManager: React.FC = () => {
 
       <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        <div className={`w-48 border-r p-3 overflow-y-auto ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-          <h3 className="font-semibold mb-3 text-sm">Quick Access</h3>
+        <div className={`w-32 sm:w-48 border-r p-3 overflow-y-auto ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+          <h3 className="font-semibold mb-3 text-xs sm:text-sm">Quick Access</h3>
           <div className="space-y-1">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => setCurrentPath(item.path)}
-                className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
-                  JSON.stringify(currentPath) === JSON.stringify(item.path)
-                    ? 'bg-blue-500 text-white'
-                    : isDarkMode
-                    ? 'hover:bg-gray-800 text-gray-300'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-              >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">{item.name}</span>
-              </button>
-            ))}
+            {sidebarItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => setCurrentPath(item.path)}
+                  className={`w-full flex items-center space-x-2 px-2 sm:px-3 py-2 rounded-lg text-left transition-colors text-xs sm:text-sm ${
+                    JSON.stringify(currentPath) === JSON.stringify(item.path)
+                      ? 'bg-blue-500 text-white'
+                      : isDarkMode
+                      ? 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <IconComponent className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate hidden sm:block">{item.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -273,7 +289,7 @@ const FileManager: React.FC = () => {
                 className="rounded-lg"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                New Folder
+                <span className="hidden sm:inline">New Folder</span>
               </Button>
             </div>
             
@@ -316,76 +332,74 @@ const FileManager: React.FC = () => {
           <div className="flex-1 p-4 overflow-auto">
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                {Object.entries(filteredItems).map(([name, item]: [string, any]) => (
-                  <button
-                    key={name}
-                    onDoubleClick={() => {
-                      if (item.type === 'folder') {
-                        navigateToFolder(name);
-                      }
-                    }}
-                    onClick={() => {
-                      if (selectedItems.includes(name)) {
-                        setSelectedItems(selectedItems.filter(i => i !== name));
-                      } else {
-                        setSelectedItems([name]);
-                      }
-                    }}
-                    className={`flex flex-col items-center space-y-2 p-3 rounded-xl transition-all hover:scale-105 ${
-                      selectedItems.includes(name)
-                        ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
-                        : isDarkMode
-                        ? 'hover:bg-gray-700'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    {item.type === 'folder' ? (
-                      <Folder className="w-8 h-8 text-blue-500" />
-                    ) : (
-                      <item.icon className="w-8 h-8 text-gray-500" />
-                    )}
-                    <span className="text-xs text-center break-words max-w-full leading-tight">
-                      {name}
-                    </span>
-                  </button>
-                ))}
+                {Object.entries(filteredItems).map(([name, item]: [string, any]) => {
+                  const IconComponent = item.type === 'folder' ? Folder : getFileIcon(name);
+                  return (
+                    <button
+                      key={name}
+                      onDoubleClick={() => {
+                        if (item.type === 'folder') {
+                          navigateToFolder(name);
+                        }
+                      }}
+                      onClick={() => {
+                        if (selectedItems.includes(name)) {
+                          setSelectedItems(selectedItems.filter(i => i !== name));
+                        } else {
+                          setSelectedItems([name]);
+                        }
+                      }}
+                      className={`flex flex-col items-center space-y-2 p-3 rounded-xl transition-all hover:scale-105 ${
+                        selectedItems.includes(name)
+                          ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
+                          : isDarkMode
+                          ? 'hover:bg-gray-700'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <IconComponent className={`w-6 sm:w-8 h-6 sm:h-8 ${item.type === 'folder' ? 'text-blue-500' : 'text-gray-500'}`} />
+                      <span className="text-xs text-center break-words max-w-full leading-tight">
+                        {name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-1">
-                {Object.entries(filteredItems).map(([name, item]: [string, any]) => (
-                  <button
-                    key={name}
-                    onDoubleClick={() => {
-                      if (item.type === 'folder') {
-                        navigateToFolder(name);
-                      }
-                    }}
-                    onClick={() => {
-                      if (selectedItems.includes(name)) {
-                        setSelectedItems(selectedItems.filter(i => i !== name));
-                      } else {
-                        setSelectedItems([name]);
-                      }
-                    }}
-                    className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
-                      selectedItems.includes(name)
-                        ? 'bg-blue-100 dark:bg-blue-900/30'
-                        : isDarkMode
-                        ? 'hover:bg-gray-700'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    {item.type === 'folder' ? (
-                      <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    ) : (
-                      <item.icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    )}
-                    <span className="flex-1 text-sm">{name}</span>
-                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </button>
-                ))}
+                {Object.entries(filteredItems).map(([name, item]: [string, any]) => {
+                  const IconComponent = item.type === 'folder' ? Folder : getFileIcon(name);
+                  return (
+                    <button
+                      key={name}
+                      onDoubleClick={() => {
+                        if (item.type === 'folder') {
+                          navigateToFolder(name);
+                        }
+                      }}
+                      onClick={() => {
+                        if (selectedItems.includes(name)) {
+                          setSelectedItems(selectedItems.filter(i => i !== name));
+                        } else {
+                          setSelectedItems([name]);
+                        }
+                      }}
+                      className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors group ${
+                        selectedItems.includes(name)
+                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                          : isDarkMode
+                          ? 'hover:bg-gray-700'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <IconComponent className={`w-5 h-5 flex-shrink-0 ${item.type === 'folder' ? 'text-blue-500' : 'text-gray-500'}`} />
+                      <span className="flex-1 text-sm">{name}</span>
+                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </button>
+                  );
+                })}
               </div>
             )}
 
