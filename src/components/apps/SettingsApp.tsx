@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -108,10 +107,23 @@ const SettingsApp: React.FC = () => {
     else if (userAgent.includes('Android')) osName = 'Android';
     else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) osName = 'iOS';
     
+    // Safe memory access with type checking
+    const getMemoryUsage = () => {
+      try {
+        const perf = performance as any;
+        if (perf.memory && perf.memory.usedJSHeapSize) {
+          return Math.round(perf.memory.usedJSHeapSize / 1024 / 1024);
+        }
+      } catch (error) {
+        console.log('Memory API not available');
+      }
+      return 16; // fallback value
+    };
+    
     return {
       processor: `${browserName} Engine`,
-      ram: `${Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024 || 16)} MB Used`,
-      storage: `${Math.round((navigator.storage?.estimate ? 0 : 512))} GB Available`,
+      ram: `${getMemoryUsage()} MB Used`,
+      storage: `512 GB Available`,
       graphics: `${osName} Graphics`,
       os: `Aczen OS v2.1.0 (${osName})`,
       build: now.toLocaleDateString(),
