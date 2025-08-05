@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
   Plus, Save, Download, Upload, Search, Undo, Redo, 
-  Freeze, RowsIcon, Columns, Trash2, Edit3, Bold, 
+  Snowflake, RowsIcon, Columns, Trash2, Edit3, Bold, 
   Italic, AlignLeft, AlignCenter, AlignRight, Palette
 } from 'lucide-react';
 
