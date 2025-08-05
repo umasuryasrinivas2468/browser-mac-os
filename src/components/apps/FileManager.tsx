@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -15,10 +14,12 @@ import {
   MoreVertical,
   ArrowLeft,
   Grid,
-  List
+  List,
+  FileText
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import TextEditor from './TextEditor';
 
 interface FileItem {
   type: 'file' | 'folder';
@@ -28,7 +29,7 @@ interface FileItem {
 }
 
 const FileManager: React.FC = () => {
-  const { isDarkMode } = useOS();
+  const { isDarkMode, openWindow } = useOS();
   const [currentPath, setCurrentPath] = useState(['Home']);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -110,7 +111,9 @@ const FileManager: React.FC = () => {
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
     
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
+    if (['txt', 'doc', 'docx', 'pdf'].includes(extension || '')) {
+      return FileText;
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
       return Image;
     } else if (['mp3', 'wav', 'flac', 'm3u'].includes(extension || '')) {
       return Music;
@@ -119,6 +122,20 @@ const FileManager: React.FC = () => {
     }
     
     return File;
+  };
+
+  const handleFileOpen = (fileName: string, item: any) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    
+    // Check if it's a text document
+    if (['txt', 'doc', 'docx', 'pdf'].includes(extension || '')) {
+      // Open the file in TextEditor
+      openWindow({
+        id: `texteditor-${fileName}`,
+        title: `TextEdit - ${fileName}`,
+        component: () => <TextEditor initialFileName={fileName} />
+      });
+    }
   };
 
   const getCurrentFolder = () => {
@@ -360,6 +377,8 @@ const FileManager: React.FC = () => {
                       onDoubleClick={() => {
                         if (item.type === 'folder') {
                           navigateToFolder(name);
+                        } else {
+                          handleFileOpen(name, item);
                         }
                       }}
                       onClick={() => {
@@ -395,6 +414,8 @@ const FileManager: React.FC = () => {
                       onDoubleClick={() => {
                         if (item.type === 'folder') {
                           navigateToFolder(name);
+                        } else {
+                          handleFileOpen(name, item);
                         }
                       }}
                       onClick={() => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -17,7 +18,8 @@ import {
   FileSpreadsheet,
   Search,
   MapPin,
-  Phone
+  Phone,
+  Presentation
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -34,6 +36,7 @@ import AczenIDEApp from '@/components/apps/AczenIDEApp';
 import AczenSheetsApp from '@/components/apps/AczenSheetsApp';
 import MapsApp from '@/components/apps/MapsApp';
 import AczenCallApp from '@/components/apps/AczenCallApp';
+import SlideDeckEditor from '@/components/apps/SlideDeckEditor';
 
 const AppLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +57,13 @@ const AppLauncher: React.FC = () => {
       icon: FileText,
       component: TextEditor,
       color: 'bg-blue-600'
+    },
+    {
+      id: 'slide-deck-editor',
+      title: 'Slide Deck Editor',
+      icon: Presentation,
+      component: SlideDeckEditor,
+      color: 'bg-orange-500'
     },
     {
       id: 'notes',
