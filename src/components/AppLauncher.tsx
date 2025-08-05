@@ -14,6 +14,7 @@ import {
   Building2,
   Users,
   Code,
+  FileSpreadsheet,
   Map
 } from 'lucide-react';
 
@@ -84,14 +85,6 @@ const AppLauncher: React.FC = () => {
       color: 'bg-red-500'
     },
     {
-      id: 'aczen-sheets',
-      name: 'Aczen Sheets',
-      icon: FileText,
-      component: AczenSheetsApp,
-      description: 'Simple spreadsheet app',
-      color: 'bg-green-600'
-    },
-    {
       id: 'aczen-bilz',
       name: 'Aczen Bilz',
       icon: Building2,
@@ -140,6 +133,14 @@ const AppLauncher: React.FC = () => {
       color: 'bg-gray-800'
     },
     {
+      id: 'notes',
+      name: 'Notes',
+      icon: FileText,
+      component: NotesApp,
+      description: 'Take quick notes',
+      color: 'bg-yellow-500'
+    },
+    {
       id: 'slide-deck',
       name: 'Slide Deck Editor',
       icon: FileText,
@@ -158,7 +159,7 @@ const AppLauncher: React.FC = () => {
     {
       id: 'onlyoffice-calc',
       name: 'OnlyOffice Calc',
-      icon: FileText,
+      icon: FileSpreadsheet,
       component: OnlyOfficeCalc,
       description: 'Professional spreadsheet editor',
       color: 'bg-green-700'
