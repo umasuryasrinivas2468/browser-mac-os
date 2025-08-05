@@ -1,463 +1,466 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useOS } from '@/contexts/OSContext';
+
+import React, { useState, useRef } from 'react';
 import { 
   Folder, 
-  File, 
-  Home, 
-  Download, 
-  Image, 
-  Music, 
-  Video, 
-  ChevronRight, 
-  Search,
+  FileText, 
+  Image as ImageIcon, 
+  Upload,
+  Download,
+  Trash2,
   Plus,
-  MoreVertical,
   ArrowLeft,
+  Search,
   Grid,
   List,
-  FileText
+  Eye,
+  X
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import TextEditor from './TextEditor';
 
 interface FileItem {
-  type: 'file' | 'folder';
-  children?: { [key: string]: FileItem };
+  id: string;
+  name: string;
+  type: 'folder' | 'file';
+  size?: number;
+  lastModified: Date;
   content?: string;
-  savedAt?: string;
+  fileType?: string;
 }
 
 const FileManager: React.FC = () => {
-  const { isDarkMode, openWindow } = useOS();
-  const [currentPath, setCurrentPath] = useState(['Home']);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPath, setCurrentPath] = useState('/');
+  const [files, setFiles] = useState<FileItem[]>([
+    {
+      id: '1',
+      name: 'Documents',
+      type: 'folder',
+      lastModified: new Date(),
+    },
+    {
+      id: '2',
+      name: 'Pictures',
+      type: 'folder',
+      lastModified: new Date(),
+    },
+    {
+      id: '3',
+      name: 'Downloads',
+      type: 'folder',
+      lastModified: new Date(),
+    },
+  ]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [fileStructure, setFileStructure] = useState({
-    'Home': {
-      type: 'folder' as const,
-      children: {
-        'Desktop': {
-          type: 'folder' as const,
-          children: {
-            'README.txt': { type: 'file' as const },
-            'Shortcut.lnk': { type: 'file' as const }
+  // Mock file structure for different folders
+  const getFolderContents = (folderName: string): FileItem[] => {
+    switch (folderName) {
+      case 'Pictures':
+        return [
+          {
+            id: 'pic1',
+            name: 'screenshot_2024.png',
+            type: 'file',
+            size: 1024 * 500,
+            lastModified: new Date(),
+            fileType: 'image/png',
+            content: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+          },
+          {
+            id: 'pic2',
+            name: 'vacation.jpg',
+            type: 'file',
+            size: 1024 * 800,
+            lastModified: new Date(),
+            fileType: 'image/jpeg',
+            content: '/placeholder.svg?height=400&width=600'
           }
-        },
-        'Documents': {
-          type: 'folder' as const,
-          children: {
-            'Resume.pdf': { type: 'file' as const },
-            'Project Report.docx': { type: 'file' as const },
-            'Presentation.pptx': { type: 'file' as const }
+        ];
+      case 'Documents':
+        return [
+          {
+            id: 'doc1',
+            name: 'Report.pdf',
+            type: 'file',
+            size: 1024 * 200,
+            lastModified: new Date(),
+            fileType: 'application/pdf'
+          },
+          {
+            id: 'doc2',
+            name: 'Notes.txt',
+            type: 'file',
+            size: 1024 * 5,
+            lastModified: new Date(),
+            fileType: 'text/plain'
           }
-        },
-        'Downloads': {
-          type: 'folder' as const,
-          children: {
-            'installer.dmg': { type: 'file' as const },
-            'photo.jpg': { type: 'file' as const },
-            'song.mp3': { type: 'file' as const }
+        ];
+      case 'Downloads':
+        return [
+          {
+            id: 'dl1',
+            name: 'installer.zip',
+            type: 'file',
+            size: 1024 * 1024 * 5,
+            lastModified: new Date(),
+            fileType: 'application/zip'
           }
-        },
-        'Pictures': {
-          type: 'folder' as const,
-          children: {
-            'vacation.jpg': { type: 'file' as const },
-            'family.png': { type: 'file' as const },
-            'screenshot.png': { type: 'file' as const }
-          }
-        },
-        'Music': {
-          type: 'folder' as const,
-          children: {
-            'playlist.m3u': { type: 'file' as const },
-            'favorite-song.mp3': { type: 'file' as const }
-          }
-        },
-        'Videos': {
-          type: 'folder' as const,
-          children: {
-            'movie.mp4': { type: 'file' as const },
-            'tutorial.mov': { type: 'file' as const }
-          }
-        }
-      }
+        ];
+      default:
+        return [];
     }
-  });
+  };
 
-  // Load file structure from localStorage on component mount
-  useEffect(() => {
-    const savedStructure = localStorage.getItem('filemanager_structure');
-    if (savedStructure) {
-      try {
-        const parsed = JSON.parse(savedStructure);
-        setFileStructure(parsed);
-      } catch (e) {
-        console.error('Error parsing file structure:', e);
-      }
-    }
-  }, []);
-
-  // Save file structure to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-  }, [fileStructure]);
-
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return '-';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
     
-    if (['txt', 'doc', 'docx', 'pdf'].includes(extension || '')) {
-      return FileText;
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
-      return Image;
-    } else if (['mp3', 'wav', 'flac', 'm3u'].includes(extension || '')) {
-      return Music;
-    } else if (['mp4', 'avi', 'mov', 'wmv', 'flv'].includes(extension || '')) {
-      return Video;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
     }
     
-    return File;
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
   };
 
-  const handleFileOpen = (fileName: string, item: any) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+  const getFileIcon = (item: FileItem) => {
+    if (item.type === 'folder') {
+      return <Folder className="w-6 h-6 text-blue-500" />;
+    }
     
-    // Check if it's a text document
-    if (['txt', 'doc', 'docx', 'pdf'].includes(extension || '')) {
-      // Open the file in TextEditor
-      openWindow({
-        id: `texteditor-${fileName}`,
-        title: `TextEdit - ${fileName}`,
-        component: () => <TextEditor initialFileName={fileName} />
-      });
+    if (item.fileType?.startsWith('image/')) {
+      return <ImageIcon className="w-6 h-6 text-green-500" />;
     }
-  };
-
-  const getCurrentFolder = () => {
-    let current: any = fileStructure;
-    for (const path of currentPath) {
-      if (current && current[path] && current[path].children) {
-        current = current[path].children;
-      } else if (current && current[path]) {
-        return {};
-      } else {
-        setCurrentPath(['Home']);
-        return fileStructure['Home'].children || {};
-      }
-    }
-    return current || {};
-  };
-
-  const navigateToFolder = (folderName: string) => {
-    const currentFolder = getCurrentFolder();
-    if (currentFolder[folderName] && currentFolder[folderName].type === 'folder') {
-      setCurrentPath([...currentPath, folderName]);
-      setSearchQuery('');
-    }
-  };
-
-  const navigateBack = () => {
-    if (currentPath.length > 1) {
-      setCurrentPath(currentPath.slice(0, -1));
-    }
-  };
-
-  const navigateToPath = (index: number) => {
-    setCurrentPath(currentPath.slice(0, index + 1));
-    setSearchQuery('');
-  };
-
-  const createFolder = () => {
-    if (!newFolderName.trim()) return;
     
-    setFileStructure(prev => {
-      const newStructure = JSON.parse(JSON.stringify(prev));
-      let current = newStructure;
-      
-      // Navigate to current path
-      for (const path of currentPath) {
-        if (current[path] && current[path].children) {
-          current = current[path].children;
-        }
-      }
-      
-      // Add new folder
-      current[newFolderName] = {
+    return <FileText className="w-6 h-6 text-gray-500" />;
+  };
+
+  const handleFileClick = (file: FileItem) => {
+    if (file.type === 'folder') {
+      setCurrentPath(`/${file.name}`);
+      setFiles(getFolderContents(file.name));
+    } else if (file.fileType?.startsWith('image/')) {
+      setPreviewFile(file);
+    }
+  };
+
+  const handleGoBack = () => {
+    setCurrentPath('/');
+    setFiles([
+      {
+        id: '1',
+        name: 'Documents',
         type: 'folder',
-        children: {}
+        lastModified: new Date(),
+      },
+      {
+        id: '2',
+        name: 'Pictures',
+        type: 'folder',
+        lastModified: new Date(),
+      },
+      {
+        id: '3',
+        name: 'Downloads',
+        type: 'folder',
+        lastModified: new Date(),
+      },
+    ]);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFiles = Array.from(event.target.files || []);
+    
+    uploadedFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newFile: FileItem = {
+          id: Date.now().toString() + Math.random(),
+          name: file.name,
+          type: 'file',
+          size: file.size,
+          lastModified: new Date(),
+          fileType: file.type,
+          content: e.target?.result as string
+        };
+        
+        setFiles(prev => [...prev, newFile]);
       };
       
-      return newStructure;
-    });
-    
-    setNewFolderName('');
-    setShowNewFolderInput(false);
-  };
-
-  const currentFolder = getCurrentFolder();
-  
-  // Filter items based on search query
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return currentFolder;
-    
-    const filtered: any = {};
-    Object.entries(currentFolder).forEach(([name, item]: [string, any]) => {
-      if (name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        filtered[name] = item;
+      if (file.type.startsWith('image/')) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
       }
     });
-    return filtered;
-  }, [currentFolder, searchQuery]);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
-  const sidebarItems = [
-    { name: 'Home', icon: Home, path: ['Home'] },
-    { name: 'Desktop', icon: Folder, path: ['Home', 'Desktop'] },
-    { name: 'Documents', icon: Folder, path: ['Home', 'Documents'] },
-    { name: 'Downloads', icon: Download, path: ['Home', 'Downloads'] },
-    { name: 'Pictures', icon: Image, path: ['Home', 'Pictures'] },
-    { name: 'Music', icon: Music, path: ['Home', 'Music'] },
-    { name: 'Videos', icon: Video, path: ['Home', 'Videos'] }
-  ];
+  const handleCreateFolder = () => {
+    if (newFolderName.trim()) {
+      const newFolder: FileItem = {
+        id: Date.now().toString(),
+        name: newFolderName.trim(),
+        type: 'folder',
+        lastModified: new Date(),
+      };
+      
+      setFiles(prev => [...prev, newFolder]);
+      setNewFolderName('');
+      setShowNewFolderDialog(false);
+    }
+  };
+
+  const handleDeleteFiles = () => {
+    setFiles(prev => prev.filter(file => !selectedFiles.includes(file.id)));
+    setSelectedFiles([]);
+  };
+
+  const toggleFileSelection = (fileId: string) => {
+    setSelectedFiles(prev => 
+      prev.includes(fileId) 
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
+  };
+
+  const filteredFiles = files.filter(file =>
+    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className={`flex flex-col h-full rounded-xl overflow-hidden ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-      {/* Top Toolbar */}
-      <div className={`flex items-center justify-between p-2 border-b ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={navigateBack}
-            disabled={currentPath.length <= 1}
-            className="rounded-lg"
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleGoBack}
+            disabled={currentPath === '/'}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           
-          <div className="flex items-center space-x-1">
-            {currentPath.map((path, index) => (
-              <React.Fragment key={index}>
-                <button
-                  onClick={() => navigateToPath(index)}
-                  className="text-blue-500 hover:text-blue-600 text-sm px-2 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                >
-                  {path}
-                </button>
-                {index < currentPath.length - 1 && (
-                  <ChevronRight className="w-3 h-3 text-gray-400" />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {currentPath}
+          </span>
         </div>
 
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
               placeholder="Search files..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-32 sm:w-48 rounded-lg"
+              className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </div>
           
-          <div className="flex rounded-lg border">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="rounded-l-lg rounded-r-none"
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-r-lg rounded-l-none"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <div className={`w-32 sm:w-48 border-r p-3 overflow-y-auto ${isDarkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-          <h3 className="font-semibold mb-3 text-xs sm:text-sm">Quick Access</h3>
-          <div className="space-y-1">
-            {sidebarItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => setCurrentPath(item.path)}
-                  className={`w-full flex items-center space-x-2 px-2 sm:px-3 py-2 rounded-lg text-left transition-colors text-xs sm:text-sm ${
-                    JSON.stringify(currentPath) === JSON.stringify(item.path)
-                      ? 'bg-blue-500 text-white'
-                      : isDarkMode
-                      ? 'hover:bg-gray-800 text-gray-300'
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate hidden sm:block">{item.name}</span>
-                </button>
-              );
-            })}
-          </div>
+      {/* Action Bar */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowNewFolderDialog(true)}
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Folder</span>
+          </button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center space-x-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Upload</span>
+          </button>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Action Bar */}
-          <div className={`flex items-center justify-between p-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="flex items-center space-x-2">
-              <Button
-                onClick={() => setShowNewFolderInput(true)}
-                size="sm"
-                className="rounded-lg"
+        {selectedFiles.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {selectedFiles.length} selected
+            </span>
+            <button
+              onClick={handleDeleteFiles}
+              className="flex items-center space-x-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* File Grid/List */}
+      <div className="flex-1 overflow-auto p-4">
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {filteredFiles.map((file) => (
+              <div
+                key={file.id}
+                className={`group p-4 rounded-lg border-2 transition-all cursor-pointer hover:border-blue-300 ${
+                  selectedFiles.includes(file.id)
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+                onClick={(e) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    toggleFileSelection(file.id);
+                  } else {
+                    handleFileClick(file);
+                  }
+                }}
               >
-                <Plus className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">New Folder</span>
-              </Button>
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              {Object.keys(filteredItems).length} items
-            </div>
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="flex items-center justify-center">
+                    {getFileIcon(file)}
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate w-full">
+                      {file.name}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatFileSize(file.size)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-
-          {/* New Folder Input */}
-          {showNewFolderInput && (
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="Folder name"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && createFolder()}
-                  className="flex-1 rounded-lg"
-                  autoFocus
-                />
-                <Button onClick={createFolder} size="sm" className="rounded-lg">
-                  Create
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowNewFolderInput(false);
-                    setNewFolderName('');
-                  }} 
-                  size="sm"
-                  className="rounded-lg"
-                >
-                  Cancel
-                </Button>
+        ) : (
+          <div className="space-y-1">
+            {filteredFiles.map((file) => (
+              <div
+                key={file.id}
+                className={`group flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                  selectedFiles.includes(file.id)
+                    ? 'bg-blue-50 dark:bg-blue-900/20'
+                    : ''
+                }`}
+                onClick={(e) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    toggleFileSelection(file.id);
+                  } else {
+                    handleFileClick(file);
+                  }
+                }}
+              >
+                {getFileIcon(file)}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {file.name}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {formatFileSize(file.size)}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {file.lastModified.toLocaleDateString()}
+                </div>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* New Folder Dialog */}
+      {showNewFolderDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Create New Folder
+            </h3>
+            <input
+              type="text"
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
+              autoFocus
+            />
+            <div className="flex justify-end space-x-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowNewFolderDialog(false);
+                  setNewFolderName('');
+                }}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateFolder}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Create
+              </button>
             </div>
-          )}
-
-          {/* File Grid/List */}
-          <div className="flex-1 p-4 overflow-auto">
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                {Object.entries(filteredItems).map(([name, item]: [string, any]) => {
-                  const IconComponent = item.type === 'folder' ? Folder : getFileIcon(name);
-                  return (
-                    <button
-                      key={name}
-                      onDoubleClick={() => {
-                        if (item.type === 'folder') {
-                          navigateToFolder(name);
-                        } else {
-                          handleFileOpen(name, item);
-                        }
-                      }}
-                      onClick={() => {
-                        if (selectedItems.includes(name)) {
-                          setSelectedItems(selectedItems.filter(i => i !== name));
-                        } else {
-                          setSelectedItems([name]);
-                        }
-                      }}
-                      className={`flex flex-col items-center space-y-2 p-3 rounded-xl transition-all hover:scale-105 ${
-                        selectedItems.includes(name)
-                          ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
-                          : isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <IconComponent className={`w-6 sm:w-8 h-6 sm:h-8 ${item.type === 'folder' ? 'text-blue-500' : 'text-gray-500'}`} />
-                      <span className="text-xs text-center break-words max-w-full leading-tight">
-                        {name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {Object.entries(filteredItems).map(([name, item]: [string, any]) => {
-                  const IconComponent = item.type === 'folder' ? Folder : getFileIcon(name);
-                  return (
-                    <button
-                      key={name}
-                      onDoubleClick={() => {
-                        if (item.type === 'folder') {
-                          navigateToFolder(name);
-                        } else {
-                          handleFileOpen(name, item);
-                        }
-                      }}
-                      onClick={() => {
-                        if (selectedItems.includes(name)) {
-                          setSelectedItems(selectedItems.filter(i => i !== name));
-                        } else {
-                          setSelectedItems([name]);
-                        }
-                      }}
-                      className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors group ${
-                        selectedItems.includes(name)
-                          ? 'bg-blue-100 dark:bg-blue-900/30'
-                          : isDarkMode
-                          ? 'hover:bg-gray-700'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <IconComponent className={`w-5 h-5 flex-shrink-0 ${item.type === 'folder' ? 'text-blue-500' : 'text-gray-500'}`} />
-                      <span className="flex-1 text-sm">{name}</span>
-                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {Object.keys(filteredItems).length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <Folder className="w-16 h-16 mb-4 opacity-50" />
-                <p className="text-lg font-medium">
-                  {searchQuery ? 'No files found' : 'This folder is empty'}
-                </p>
-                <p className="text-sm">
-                  {searchQuery ? 'Try adjusting your search terms' : 'Create a new folder to get started'}
-                </p>
-              </div>
-            )}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="relative max-w-4xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {previewFile.name}
+              </h3>
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <img
+                src={previewFile.content}
+                alt={previewFile.name}
+                className="max-w-full max-h-[60vh] object-contain mx-auto"
+                onError={(e) => {
+                  // Fallback to placeholder if image fails to load
+                  (e.target as HTMLImageElement).src = '/placeholder.svg?height=400&width=600';
+                }}
+              />
+              <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
+                {formatFileSize(previewFile.size)} • {previewFile.lastModified.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

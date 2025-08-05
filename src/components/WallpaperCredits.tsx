@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -29,16 +30,16 @@ const WallpaperCredits: React.FC = () => {
 
   const getContributorInfo = (name: string) => {
     switch (name) {
-      case 'Smran PIN':
+      case 'Smaran P':
         return {
-          name: 'Smran PIN',
+          name: 'Smaran P',
           description: 'A passionate nature photographer who captures the beauty of mornings and evenings through stunning landscape photography.',
           speciality: 'Morning & Evening Landscapes',
           works: ['Sunrise captures', 'Golden hour photography', 'Mountain landscapes', 'Sunset compositions']
         };
-      case 'Sharita Yen':
+      case 'Charita N':
         return {
-          name: 'Sharita Yen',
+          name: 'Charita N',
           description: 'An expert in daylight photography, specializing in vibrant afternoon scenes and natural lighting.',
           speciality: 'Afternoon Photography',
           works: ['Daylight landscapes', 'Natural lighting', 'Afternoon scenes', 'Wildlife photography']
@@ -53,19 +54,19 @@ const WallpaperCredits: React.FC = () => {
   return (
     <>
       {/* Wallpaper Credits - positioned at top right corner, below the time */}
-      <div className="fixed top-28 right-8 z-5 pointer-events-auto">
+      <div className="fixed top-16 right-8 z-10 pointer-events-auto">
         <button
           onClick={() => handleContributorClick(contributor.name)}
-          className={`text-xs px-2 py-1 rounded backdrop-blur-sm transition-all duration-300 hover:scale-110 opacity-75 hover:opacity-90 ${
+          className={`text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 opacity-80 hover:opacity-100 ${
             isDarkMode 
-              ? 'bg-black/20 text-white/70 hover:bg-black/30 hover:text-white/90' 
-              : 'bg-white/20 text-black/70 hover:bg-white/30 hover:text-black/90'
-          } hover:shadow-sm`}
+              ? 'bg-black/30 text-white/80 hover:bg-black/40 hover:text-white' 
+              : 'bg-white/30 text-black/80 hover:bg-white/40 hover:text-black'
+          } hover:shadow-lg border border-white/20`}
           title={`Wallpaper by ${contributor.name} - ${contributor.time}`}
         >
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-2">
             <Camera className="w-3 h-3" />
-            <span className="font-light">{contributor.name}</span>
+            <span className="font-medium">{contributor.name}</span>
           </div>
         </button>
       </div>

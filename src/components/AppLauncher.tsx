@@ -1,25 +1,41 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Plus, X, Search } from 'lucide-react';
+import { X, Search } from 'lucide-react';
+import { 
+  Globe, 
+  FileText, 
+  Folder, 
+  Settings, 
+  Terminal,
+  Calculator,
+  Clock,
+  Calendar,
+  Building2,
+  Users,
+  Code,
+  Map
+} from 'lucide-react';
 
 // Import all app components
-import Calculator from './apps/Calculator';
+import CalculatorApp from './apps/Calculator';
 import NotesApp from './apps/NotesApp';
 import TextEditor from './apps/TextEditor';
 import FileManager from './apps/FileManager';
-import BrowserApp from './apps/BrowserApp';
+import WebBrowser from './apps/WebBrowser';
 import SettingsApp from './apps/SettingsApp';
 import CalendarApp from './apps/CalendarApp';
 import ClockApp from './apps/ClockApp';
 import TerminalApp from './apps/TerminalApp';
-import MapsApp from './apps/MapsApp';
+import MapsAppDemo from './apps/MapsAppDemo';
 import AczenSheetsApp from './apps/AczenSheetsApp';
-import SpreadsheetApp from './apps/SpreadsheetApp';
 import SlideDeckEditor from './apps/SlideDeckEditor';
 import OnlyOfficeWriter from './apps/OnlyOfficeWriter';
 import OnlyOfficeCalc from './apps/OnlyOfficeCalc';
 import OnlyOfficeImpress from './apps/OnlyOfficeImpress';
+import AczenBilzApp from './apps/AczenBilzApp';
+import AczenCRMApp from './apps/AczenCRMApp';
+import AczenIDEApp from './apps/AczenIDEApp';
 
 const AppLauncher: React.FC = () => {
   const { isDarkMode, openWindow } = useOS();
@@ -28,116 +44,140 @@ const AppLauncher: React.FC = () => {
 
   const apps = [
     {
+      id: 'browser',
+      name: 'Web Browser',
+      icon: Globe,
+      component: WebBrowser,
+      description: 'Browse the internet',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 'texteditor',
+      name: 'TextEdit',
+      icon: FileText,
+      component: TextEditor,
+      description: 'Rich text editor with formatting',
+      color: 'bg-blue-600'
+    },
+    {
       id: 'calculator',
       name: 'Calculator',
-      icon: '🧮',
-      component: Calculator,
-      description: 'Basic arithmetic calculator'
-    },
-    {
-      id: 'notes',
-      name: 'Notes',
-      icon: '📝',
-      component: NotesApp,
-      description: 'Take quick notes'
-    },
-    {
-      id: 'text-editor',
-      name: 'Text Editor',
-      icon: '📄',
-      component: TextEditor,
-      description: 'Rich text editor with formatting'
-    },
-    {
-      id: 'file-manager',
-      name: 'File Manager',
-      icon: '📁',
-      component: FileManager,
-      description: 'Manage your files and folders'
-    },
-    {
-      id: 'browser',
-      name: 'Browser',
-      icon: '🌐',
-      component: BrowserApp,
-      description: 'Web browser'
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      icon: '📅',
-      component: CalendarApp,
-      description: 'Calendar and scheduling'
+      icon: Calculator,
+      component: CalculatorApp,
+      description: 'Basic arithmetic calculator',
+      color: 'bg-orange-500'
     },
     {
       id: 'clock',
       name: 'Clock',
-      icon: '🕐',
+      icon: Clock,
       component: ClockApp,
-      description: 'World clock and timers'
+      description: 'World clock and timers',
+      color: 'bg-indigo-500'
     },
     {
-      id: 'terminal',
-      name: 'Terminal',
-      icon: '⚡',
-      component: TerminalApp,
-      description: 'Command line interface'
-    },
-    {
-      id: 'maps',
-      name: 'Maps',
-      icon: '🗺️',
-      component: MapsApp,
-      description: 'Interactive maps'
+      id: 'calendar',
+      name: 'Calendar',
+      icon: Calendar,
+      component: CalendarApp,
+      description: 'Calendar and scheduling',
+      color: 'bg-red-500'
     },
     {
       id: 'aczen-sheets',
       name: 'Aczen Sheets',
-      icon: '📊',
+      icon: FileText,
       component: AczenSheetsApp,
-      description: 'Simple spreadsheet app'
+      description: 'Simple spreadsheet app',
+      color: 'bg-green-600'
     },
     {
-      id: 'spreadsheet',
-      name: 'Advanced Spreadsheet',
-      icon: '📈',
-      component: SpreadsheetApp,
-      description: 'Full-featured spreadsheet application'
+      id: 'aczen-bilz',
+      name: 'Aczen Bilz',
+      icon: Building2,
+      component: AczenBilzApp,
+      description: 'Business management',
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'aczen-crm',
+      name: 'Aczen CRM',
+      icon: Users,
+      component: AczenCRMApp,
+      description: 'Customer relationship management',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'aczen-ide',
+      name: 'Aczen IDE',
+      icon: Code,
+      component: AczenIDEApp,
+      description: 'Integrated development environment',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'maps',
+      name: 'Maps',
+      icon: Map,
+      component: MapsAppDemo,
+      description: 'Interactive maps',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'files',
+      name: 'Files',
+      icon: Folder,
+      component: FileManager,
+      description: 'Manage your files and folders',
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'terminal',
+      name: 'Terminal',
+      icon: Terminal,
+      component: TerminalApp,
+      description: 'Command line interface',
+      color: 'bg-gray-800'
     },
     {
       id: 'slide-deck',
       name: 'Slide Deck Editor',
-      icon: '🎯',
+      icon: FileText,
       component: SlideDeckEditor,
-      description: 'Create and edit presentation slides'
+      description: 'Create and edit presentation slides',
+      color: 'bg-purple-600'
     },
     {
       id: 'onlyoffice-writer',
       name: 'OnlyOffice Writer',
-      icon: '📝',
+      icon: FileText,
       component: OnlyOfficeWriter,
-      description: 'Professional document editor'
+      description: 'Professional document editor',
+      color: 'bg-blue-700'
     },
     {
       id: 'onlyoffice-calc',
       name: 'OnlyOffice Calc',
-      icon: '📊',
+      icon: FileText,
       component: OnlyOfficeCalc,
-      description: 'Professional spreadsheet editor'
+      description: 'Professional spreadsheet editor',
+      color: 'bg-green-700'
     },
     {
       id: 'onlyoffice-impress',
       name: 'OnlyOffice Impress',
-      icon: '🎨',
+      icon: FileText,
       component: OnlyOfficeImpress,
-      description: 'Professional presentation editor'
+      description: 'Professional presentation editor',
+      color: 'bg-red-600'
     },
     {
       id: 'settings',
       name: 'Settings',
-      icon: '⚙️',
+      icon: Settings,
       component: SettingsApp,
-      description: 'System settings and preferences'
+      description: 'System settings and preferences',
+      color: 'bg-gray-600'
     }
   ];
 
@@ -188,7 +228,12 @@ const AppLauncher: React.FC = () => {
           {isOpen ? (
             <X className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
           ) : (
-            <Plus className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
+            <div className="w-6 h-6 grid grid-cols-2 gap-1">
+              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
+              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
+              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
+              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
+            </div>
           )}
         </button>
       </div>
@@ -196,7 +241,7 @@ const AppLauncher: React.FC = () => {
       {isOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div 
-            className={`app-launcher w-[800px] h-[600px] rounded-xl shadow-2xl backdrop-blur-lg border ${
+            className={`app-launcher w-[900px] h-[700px] rounded-xl shadow-2xl backdrop-blur-lg border ${
               isDarkMode 
                 ? 'bg-gray-800/95 border-gray-600/50' 
                 : 'bg-white/95 border-gray-200/50'
@@ -236,20 +281,22 @@ const AppLauncher: React.FC = () => {
 
             {/* Apps Grid */}
             <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-6 gap-4">
+              <div className="grid grid-cols-6 gap-6">
                 {filteredApps.map((app) => (
                   <button
                     key={app.id}
                     onClick={() => handleAppClick(app)}
-                    className={`p-4 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-2 ${
+                    className={`p-6 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-3 ${
                       isDarkMode 
                         ? 'hover:bg-gray-700/50 text-white' 
                         : 'hover:bg-gray-100/50 text-gray-900'
                     }`}
                     title={app.description}
                   >
-                    <div className="text-3xl mb-2">{app.icon}</div>
-                    <div className="text-xs font-medium text-center">{app.name}</div>
+                    <div className={`w-12 h-12 ${app.color} rounded-lg flex items-center justify-center shadow-md`}>
+                      <app.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-xs font-medium text-center leading-tight">{app.name}</div>
                   </button>
                 ))}
               </div>
