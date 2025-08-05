@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -19,6 +20,13 @@ interface TextEditorProps {
   initialFileName?: string;
 }
 
+interface FileItem {
+  type: 'file' | 'folder';
+  children?: { [key: string]: FileItem };
+  content?: string;
+  savedAt?: string;
+}
+
 const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
   const { isDarkMode } = useOS();
   const [content, setContent] = useState('');
@@ -31,25 +39,32 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
   // Load file content if initialFileName is provided
   useEffect(() => {
     if (initialFileName) {
-      const fileStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
+      const fileStructureStr = localStorage.getItem('filemanager_structure');
+      if (!fileStructureStr) return;
       
-      // Search for the file in the structure
-      const findFile = (structure: any, path: string[] = []): any => {
-        for (const [key, value] of Object.entries(structure)) {
-          if (key === initialFileName && value.type === 'file') {
-            return value.content || '';
+      try {
+        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+        
+        // Search for the file in the structure
+        const findFile = (structure: { [key: string]: FileItem }, path: string[] = []): string | null => {
+          for (const [key, value] of Object.entries(structure)) {
+            if (key === initialFileName && value.type === 'file') {
+              return value.content || '';
+            }
+            if (value.type === 'folder' && value.children) {
+              const result = findFile(value.children, [...path, key]);
+              if (result !== null) return result;
+            }
           }
-          if (value.type === 'folder' && value.children) {
-            const result = findFile(value.children, [...path, key]);
-            if (result !== null) return result;
-          }
-        }
-        return null;
-      };
+          return null;
+        };
 
-      const fileContent = findFile(fileStructure);
-      if (fileContent) {
-        setContent(fileContent);
+        const fileContent = findFile(fileStructure);
+        if (fileContent) {
+          setContent(fileContent);
+        }
+      } catch (error) {
+        console.error('Error parsing file structure:', error);
       }
     }
   }, [initialFileName]);
@@ -87,25 +102,104 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
   };
 
   const saveFile = () => {
-    const fileStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
+    const fileStructureStr = localStorage.getItem('filemanager_structure');
+    if (!fileStructureStr) return;
+    
+    try {
+      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
 
-    // Find the file in the structure
-    const updateFile = (structure: any, path: string[] = []) => {
-      for (const [key, value] of Object.entries(structure)) {
-        if (key === fileName && value.type === 'file') {
-          value.content = content;
-          return true;
+      // Find the file in the structure
+      const updateFile = (structure: { [key: string]: FileItem }, path: string[] = []): boolean => {
+        for (const [key, value] of Object.entries(structure)) {
+          if (key === fileName && value.type === 'file') {
+            value.content = content;
+            return true;
+          }
+          if (value.type === 'folder' && value.children) {
+            const result = updateFile(value.children, [...path, key]);
+            if (result) return result;
+          }
         }
-        if (value.type === 'folder' && value.children) {
-          const result = updateFile(value.children, [...path, key]);
-          if (result) return result;
-        }
+        return false;
+      };
+
+      updateFile(fileStructure);
+      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    } catch (error) {
+      console.error('Error updating file structure:', error);
+    }
+  };
+
+  const saveAsPDF = () => {
+    const pdf = new jsPDF();
+    const lines = content.split('\n');
+    let yPosition = 20;
+    
+    lines.forEach((line) => {
+      if (yPosition > 280) {
+        pdf.addPage();
+        yPosition = 20;
       }
-      return false;
-    };
+      pdf.text(line, 20, yPosition);
+      yPosition += 10;
+    });
 
-    updateFile(fileStructure);
-    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    // Save to Downloads folder in file structure
+    const fileStructureStr = localStorage.getItem('filemanager_structure');
+    if (fileStructureStr) {
+      try {
+        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+        const pdfFileName = `${fileName}.pdf`;
+        
+        // Navigate to Downloads folder and add the PDF
+        if (fileStructure.Home?.children?.Downloads?.children) {
+          fileStructure.Home.children.Downloads.children[pdfFileName] = {
+            type: 'file',
+            content: content,
+            savedAt: new Date().toISOString()
+          };
+          localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+        }
+      } catch (error) {
+        console.error('Error saving PDF to file structure:', error);
+      }
+    }
+
+    pdf.save(`${fileName}.pdf`);
+  };
+
+  const saveAsDoc = () => {
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName}.doc`;
+
+    // Save to Downloads folder in file structure
+    const fileStructureStr = localStorage.getItem('filemanager_structure');
+    if (fileStructureStr) {
+      try {
+        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+        const docFileName = `${fileName}.doc`;
+        
+        // Navigate to Downloads folder and add the DOC
+        if (fileStructure.Home?.children?.Downloads?.children) {
+          fileStructure.Home.children.Downloads.children[docFileName] = {
+            type: 'file',
+            content: content,
+            savedAt: new Date().toISOString()
+          };
+          localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+        }
+      } catch (error) {
+        console.error('Error saving DOC to file structure:', error);
+      }
+    }
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -160,6 +254,14 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         <Button onClick={saveFile} size="sm">
           <Save className="w-4 h-4 mr-2" />
           Save
+        </Button>
+        <Button onClick={saveAsPDF} size="sm" variant="outline">
+          <FileDown className="w-4 h-4 mr-2" />
+          Save as PDF
+        </Button>
+        <Button onClick={saveAsDoc} size="sm" variant="outline">
+          <FileDown className="w-4 h-4 mr-2" />
+          Save as DOC
         </Button>
       </div>
 
