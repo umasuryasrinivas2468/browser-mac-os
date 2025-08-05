@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Plus, X } from 'lucide-react';
-import PopupApps from './PopupApps';
+import { Plus, X, Search } from 'lucide-react';
 
 // Import all app components
 import Calculator from './apps/Calculator';
@@ -24,7 +24,7 @@ import OnlyOfficeImpress from './apps/OnlyOfficeImpress';
 const AppLauncher: React.FC = () => {
   const { isDarkMode, openWindow } = useOS();
   const [isOpen, setIsOpen] = useState(false);
-  const [showPopularApps, setShowPopularApps] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const apps = [
     {
@@ -141,6 +141,11 @@ const AppLauncher: React.FC = () => {
     }
   ];
 
+  const filteredApps = apps.filter(app =>
+    app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    app.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleAppClick = (app: any) => {
     openWindow({
       id: app.id,
@@ -148,11 +153,7 @@ const AppLauncher: React.FC = () => {
       component: app.component,
     });
     setIsOpen(false);
-  };
-
-  const handlePopularAppsClick = () => {
-    setShowPopularApps(true);
-    setIsOpen(false);
+    setSearchQuery('');
   };
 
   useEffect(() => {
@@ -190,52 +191,71 @@ const AppLauncher: React.FC = () => {
             <Plus className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
           )}
         </button>
+      </div>
 
-        {isOpen && (
+      {isOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div 
-            className={`absolute bottom-16 left-0 w-80 max-h-96 overflow-y-auto rounded-xl shadow-2xl backdrop-blur-lg border ${
+            className={`app-launcher w-[800px] h-[600px] rounded-xl shadow-2xl backdrop-blur-lg border ${
               isDarkMode 
                 ? 'bg-gray-800/95 border-gray-600/50' 
                 : 'bg-white/95 border-gray-200/50'
-            } p-4`}
+            } p-6 flex flex-col`}
           >
-            <div className="grid grid-cols-3 gap-3">
-              {apps.map((app) => (
-                <button
-                  key={app.id}
-                  onClick={() => handleAppClick(app)}
-                  className={`p-3 rounded-lg transition-all duration-200 hover:scale-105 ${
-                    isDarkMode 
-                      ? 'hover:bg-gray-700/50 text-white' 
-                      : 'hover:bg-gray-100/50 text-gray-900'
-                  }`}
-                  title={app.description}
-                >
-                  <div className="text-2xl mb-1">{app.icon}</div>
-                  <div className="text-xs font-medium truncate">{app.name}</div>
-                </button>
-              ))}
-              
-              {/* Popular Apps Button */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Applications
+              </h2>
               <button
-                onClick={handlePopularAppsClick}
-                className={`p-3 rounded-lg transition-all duration-200 hover:scale-105 ${
-                  isDarkMode 
-                    ? 'hover:bg-gray-700/50 text-white border border-gray-600' 
-                    : 'hover:bg-gray-100/50 text-gray-900 border border-gray-300'
-                } border-dashed`}
-                title="More Popular Apps"
+                onClick={() => setIsOpen(false)}
+                className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  isDarkMode ? 'text-white' : 'text-gray-600'
+                }`}
               >
-                <div className="text-2xl mb-1">🌟</div>
-                <div className="text-xs font-medium">More Apps</div>
+                <X className="w-5 h-5" />
               </button>
             </div>
-          </div>
-        )}
-      </div>
 
-      {showPopularApps && (
-        <PopupApps onClose={() => setShowPopularApps(false)} />
+            {/* Search Bar */}
+            <div className="relative mb-6">
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search applications..."
+                className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            {/* Apps Grid */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-6 gap-4">
+                {filteredApps.map((app) => (
+                  <button
+                    key={app.id}
+                    onClick={() => handleAppClick(app)}
+                    className={`p-4 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-2 ${
+                      isDarkMode 
+                        ? 'hover:bg-gray-700/50 text-white' 
+                        : 'hover:bg-gray-100/50 text-gray-900'
+                    }`}
+                    title={app.description}
+                  >
+                    <div className="text-3xl mb-2">{app.icon}</div>
+                    <div className="text-xs font-medium text-center">{app.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

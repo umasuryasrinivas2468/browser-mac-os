@@ -15,7 +15,7 @@ const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
   
-  // Use the dynamic wallpaper hook
+  // Use the dynamic wallpaper hook with current time
   const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
 
   const handleSecurityClick = () => {
@@ -37,7 +37,7 @@ const Desktop: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen w-full relative transition-all duration-500 ${backgroundClass}`}>
+    <div className="min-h-screen w-full relative">
       {/* Copy Protection */}
       <CopyProtection />
       
@@ -49,7 +49,7 @@ const Desktop: React.FC = () => {
       
       <DesktopClock />
       
-      {/* Wallpaper Credits - positioned at bottom left corner */}
+      {/* Wallpaper Credits */}
       <WallpaperCredits />
       
       {windows.map((window) => (
