@@ -1,7 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, FileDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import jsPDF from 'jspdf';
 
 interface Note {
   id: string;
@@ -9,6 +10,13 @@ interface Note {
   content: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface FileItem {
+  type: 'file' | 'folder';
+  children?: { [key: string]: FileItem };
+  content?: string;
+  savedAt?: string;
 }
 
 const NotesApp: React.FC = () => {
@@ -67,6 +75,105 @@ const NotesApp: React.FC = () => {
     if (selectedNote?.id === noteId) {
       setSelectedNote(filteredNotes.length > 0 ? filteredNotes[0] : null);
     }
+  };
+
+  const saveAsPDF = () => {
+    if (!selectedNote) return;
+    
+    const pdf = new jsPDF();
+    const lines = selectedNote.content.split('\n');
+    let yPosition = 20;
+    
+    // Add title
+    pdf.setFontSize(16);
+    pdf.text(selectedNote.title, 20, yPosition);
+    yPosition += 20;
+    
+    // Add content
+    pdf.setFontSize(12);
+    lines.forEach((line) => {
+      if (yPosition > 280) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.text(line, 20, yPosition);
+      yPosition += 10;
+    });
+
+    // Save to Downloads folder in file structure
+    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
+    try {
+      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+      const pdfFileName = `${selectedNote.title}.pdf`;
+      
+      // Ensure Downloads folder structure exists
+      if (!fileStructure.Downloads) {
+        fileStructure.Downloads = {
+          type: 'folder',
+          children: {}
+        };
+      }
+      if (!fileStructure.Downloads.children) {
+        fileStructure.Downloads.children = {};
+      }
+      
+      // Add PDF to Downloads
+      fileStructure.Downloads.children[pdfFileName] = {
+        type: 'file',
+        content: `PDF_CONTENT:${selectedNote.content}`,
+        savedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    } catch (error) {
+      console.error('Error saving PDF to file structure:', error);
+    }
+
+    pdf.save(`${selectedNote.title}.pdf`);
+  };
+
+  const saveAsPPT = () => {
+    if (!selectedNote) return;
+    
+    // Save to Downloads folder in file structure
+    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
+    try {
+      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+      const pptFileName = `${selectedNote.title}.pptx`;
+      
+      // Ensure Downloads folder structure exists
+      if (!fileStructure.Downloads) {
+        fileStructure.Downloads = {
+          type: 'folder',
+          children: {}
+        };
+      }
+      if (!fileStructure.Downloads.children) {
+        fileStructure.Downloads.children = {};
+      }
+      
+      // Add PPT to Downloads
+      fileStructure.Downloads.children[pptFileName] = {
+        type: 'file',
+        content: `PPT_CONTENT:${selectedNote.content}`,
+        savedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    } catch (error) {
+      console.error('Error saving PPT to file structure:', error);
+    }
+
+    // Create and download PPT file
+    const blob = new Blob([selectedNote.content], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pptFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const filteredNotes = notes.filter(note => 
@@ -149,16 +256,26 @@ const NotesApp: React.FC = () => {
                 type="text"
                 value={selectedNote.title}
                 onChange={(e) => updateNote({ ...selectedNote, title: e.target.value })}
-                className={`text-xl font-semibold bg-transparent border-none outline-none ${
+                className={`text-xl font-semibold bg-transparent border-none outline-none flex-1 mr-4 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}
               />
-              <button
-                onClick={() => deleteNote(selectedNote.id)}
-                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <Button onClick={saveAsPDF} size="sm" variant="outline">
+                  <FileDown className="w-4 h-4 mr-2" />
+                  PDF
+                </Button>
+                <Button onClick={saveAsPPT} size="sm" variant="outline">
+                  <FileDown className="w-4 h-4 mr-2" />
+                  PPT
+                </Button>
+                <button
+                  onClick={() => deleteNote(selectedNote.id)}
+                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Note Content */}

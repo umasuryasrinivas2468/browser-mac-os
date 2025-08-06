@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
@@ -15,8 +14,8 @@ const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
   
-  // Use the dynamic wallpaper hook with current time
-  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
+  // Use the fixed dynamic wallpaper hook
+  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper();
 
   const handleSecurityClick = () => {
     console.log('Security clicked');

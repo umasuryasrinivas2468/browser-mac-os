@@ -15,11 +15,11 @@ export const defaultWallpapers: WallpaperConfig = {
 
 export type TimeOfDay = 'morning' | 'afternoon' | 'evening';
 
-export const useDynamicWallpaper = (currentTime: Date) => {
+export const useDynamicWallpaper = () => {
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('morning');
   const [backgroundClass, setBackgroundClass] = useState<string>('');
 
-  const getTimeOfDay = (time: Date): TimeOfDay => {
+  const getTimeOfDay = (time: Date = new Date()): TimeOfDay => {
     const hour = time.getHours();
     
     if (hour >= 6 && hour < 12) {
@@ -35,39 +35,44 @@ export const useDynamicWallpaper = (currentTime: Date) => {
     return `background-image: url('${wallpaperUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;`;
   };
 
-  useEffect(() => {
-    const newTimeOfDay = getTimeOfDay(currentTime);
-    const wallpaperUrl = defaultWallpapers[newTimeOfDay];
+  const updateWallpaper = () => {
+    const now = new Date();
+    const currentTimeOfDay = getTimeOfDay(now);
+    const wallpaperUrl = defaultWallpapers[currentTimeOfDay];
     
-    setTimeOfDay(newTimeOfDay);
+    console.log('Updating wallpaper:', { 
+      hour: now.getHours(), 
+      timeOfDay: currentTimeOfDay, 
+      wallpaperUrl 
+    });
     
-    // Apply the wallpaper directly to the body or a container element
+    setTimeOfDay(currentTimeOfDay);
+    
+    // Apply the wallpaper directly to the body
     const style = getBackgroundStyle(wallpaperUrl);
     document.body.style.cssText = style;
     
     setBackgroundClass('dynamic-wallpaper');
-  }, [currentTime]);
+  };
 
-  // Set up interval to update wallpaper every minute
+  // Initial wallpaper setup
+  useEffect(() => {
+    updateWallpaper();
+  }, []);
+
+  // Set up interval to check and update wallpaper every minute
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date();
-      const newTimeOfDay = getTimeOfDay(now);
-      
-      if (newTimeOfDay !== timeOfDay) {
-        const wallpaperUrl = defaultWallpapers[newTimeOfDay];
-        const style = getBackgroundStyle(wallpaperUrl);
-        document.body.style.cssText = style;
-        setTimeOfDay(newTimeOfDay);
-      }
+      updateWallpaper();
     }, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, [timeOfDay]);
+  }, []);
 
   return {
     timeOfDay,
     backgroundClass,
-    currentWallpaper: defaultWallpapers[timeOfDay]
+    currentWallpaper: defaultWallpapers[timeOfDay],
+    updateWallpaper // Expose for manual updates if needed
   };
 };

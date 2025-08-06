@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -145,27 +144,80 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
     });
 
     // Save to Downloads folder in file structure
-    const fileStructureStr = localStorage.getItem('filemanager_structure');
-    if (fileStructureStr) {
-      try {
-        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-        const pdfFileName = `${fileName}.pdf`;
-        
-        // Navigate to Downloads folder and add the PDF
-        if (fileStructure.Home?.children?.Downloads?.children) {
-          fileStructure.Home.children.Downloads.children[pdfFileName] = {
-            type: 'file',
-            content: content,
-            savedAt: new Date().toISOString()
-          };
-          localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-        }
-      } catch (error) {
-        console.error('Error saving PDF to file structure:', error);
+    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
+    try {
+      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+      const pdfFileName = `${fileName}.pdf`;
+      
+      // Ensure Downloads folder structure exists
+      if (!fileStructure.Downloads) {
+        fileStructure.Downloads = {
+          type: 'folder',
+          children: {}
+        };
       }
+      if (!fileStructure.Downloads.children) {
+        fileStructure.Downloads.children = {};
+      }
+      
+      // Add PDF to Downloads with PDF content marker
+      fileStructure.Downloads.children[pdfFileName] = {
+        type: 'file',
+        content: `PDF_CONTENT:${content}`,
+        savedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    } catch (error) {
+      console.error('Error saving PDF to file structure:', error);
     }
 
-    pdf.save(`${fileName}.pdf`);
+    pdf.save(pdfFileName);
+  };
+
+  const saveAsPPT = () => {
+    // Create PPT content marker
+    const pptContent = `PPT_CONTENT:${content}`;
+    
+    // Save to Downloads folder in file structure
+    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
+    try {
+      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
+      const pptFileName = `${fileName}.pptx`;
+      
+      // Ensure Downloads folder structure exists
+      if (!fileStructure.Downloads) {
+        fileStructure.Downloads = {
+          type: 'folder',
+          children: {}
+        };
+      }
+      if (!fileStructure.Downloads.children) {
+        fileStructure.Downloads.children = {};
+      }
+      
+      // Add PPT to Downloads
+      fileStructure.Downloads.children[pptFileName] = {
+        type: 'file',
+        content: pptContent,
+        savedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    } catch (error) {
+      console.error('Error saving PPT to file structure:', error);
+    }
+
+    // Create and download PPT file
+    const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName}.pptx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const saveAsDoc = () => {
@@ -259,9 +311,9 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
           <FileDown className="w-4 h-4 mr-2" />
           Save as PDF
         </Button>
-        <Button onClick={saveAsDoc} size="sm" variant="outline">
+        <Button onClick={saveAsPPT} size="sm" variant="outline">
           <FileDown className="w-4 h-4 mr-2" />
-          Save as DOC
+          Save as PPT
         </Button>
       </div>
 
