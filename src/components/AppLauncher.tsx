@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Plus, X, Search } from 'lucide-react';
+import { Plus, X, Search, Calculator as CalculatorIcon, FileText, Folder, Settings, Terminal, Clock, Calendar, Building2, Users, Code, FileSpreadsheet, Map, Globe, Target, Grid3X3, Presentation } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 // Import all app components
@@ -9,14 +9,16 @@ import Calculator from './apps/Calculator';
 import NotesApp from './apps/NotesApp';
 import TextEditor from './apps/TextEditor';
 import FileManager from './apps/FileManager';
-import BrowserApp from './apps/BrowserApp';
+import WebBrowser from './apps/WebBrowser';
 import SettingsApp from './apps/SettingsApp';
 import CalendarApp from './apps/CalendarApp';
 import ClockApp from './apps/ClockApp';
 import TerminalApp from './apps/TerminalApp';
-import MapsApp from './apps/MapsApp';
+import MapsAppDemo from './apps/MapsAppDemo';
 import AczenSheetsApp from './apps/AczenSheetsApp';
-import SpreadsheetApp from './apps/SpreadsheetApp';
+import AczenBilzApp from './apps/AczenBilzApp';
+import AczenCRMApp from './apps/AczenCRMApp';
+import AczenIDEApp from './apps/AczenIDEApp';
 import SlideDeckEditor from './apps/SlideDeckEditor';
 
 interface AppLauncherProps {
@@ -31,95 +33,124 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
 
   const apps = [
     {
+      id: 'browser',
+      name: 'Web Browser',
+      icon: Globe,
+      component: WebBrowser,
+      description: 'Web browser',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 'texteditor',
+      name: 'TextEdit',
+      icon: FileText,
+      component: TextEditor,
+      description: 'Rich text editor with formatting',
+      color: 'bg-blue-600'
+    },
+    {
       id: 'calculator',
       name: 'Calculator',
-      icon: '🧮',
+      icon: CalculatorIcon,
       component: Calculator,
-      description: 'Basic arithmetic calculator'
-    },
-    {
-      id: 'notes',
-      name: 'Notes',
-      icon: '📝',
-      component: NotesApp,
-      description: 'Take quick notes'
-    },
-    {
-      id: 'text-editor',
-      name: 'Text Editor',
-      icon: '📄',
-      component: TextEditor,
-      description: 'Rich text editor with formatting'
-    },
-    {
-      id: 'file-manager',
-      name: 'File Manager',
-      icon: '📁',
-      component: FileManager,
-      description: 'Manage your files and folders'
-    },
-    {
-      id: 'browser',
-      name: 'Browser',
-      icon: '🌐',
-      component: BrowserApp,
-      description: 'Web browser'
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      icon: '📅',
-      component: CalendarApp,
-      description: 'Calendar and scheduling'
+      description: 'Basic arithmetic calculator',
+      color: 'bg-orange-500'
     },
     {
       id: 'clock',
       name: 'Clock',
-      icon: '🕐',
+      icon: Clock,
       component: ClockApp,
-      description: 'World clock and timers'
+      description: 'World clock and timers',
+      color: 'bg-indigo-500'
     },
     {
-      id: 'terminal',
-      name: 'Terminal',
-      icon: '⚡',
-      component: TerminalApp,
-      description: 'Command line interface'
-    },
-    {
-      id: 'maps',
-      name: 'Maps',
-      icon: '🗺️',
-      component: MapsApp,
-      description: 'Interactive maps'
+      id: 'calendar',
+      name: 'Calendar',
+      icon: Calendar,
+      component: CalendarApp,
+      description: 'Calendar and scheduling',
+      color: 'bg-red-500'
     },
     {
       id: 'aczen-sheets',
       name: 'Aczen Sheets',
-      icon: '📊',
+      icon: FileSpreadsheet,
       component: AczenSheetsApp,
-      description: 'Simple spreadsheet app'
+      description: 'Simple spreadsheet app',
+      color: 'bg-green-600'
     },
     {
-      id: 'spreadsheet',
-      name: 'Advanced Spreadsheet',
-      icon: '📈',
-      component: SpreadsheetApp,
-      description: 'Full-featured spreadsheet application'
+      id: 'aczen-bilz',
+      name: 'Aczen Bilz',
+      icon: Building2,
+      component: AczenBilzApp,
+      description: 'Business management app',
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'aczen-crm',
+      name: 'Aczen CRM',
+      icon: Users,
+      component: AczenCRMApp,
+      description: 'Customer relationship management',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'aczen-ide',
+      name: 'Aczen IDE',
+      icon: Code,
+      component: AczenIDEApp,
+      description: 'Integrated development environment',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'maps',
+      name: 'Maps',
+      icon: Map,
+      component: MapsAppDemo,
+      description: 'Interactive maps',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'files',
+      name: 'Files',
+      icon: Folder,
+      component: FileManager,
+      description: 'Manage your files and folders',
+      color: 'bg-blue-600'
+    },
+    {
+      id: 'terminal',
+      name: 'Terminal',
+      icon: Terminal,
+      component: TerminalApp,
+      description: 'Command line interface',
+      color: 'bg-gray-800'
+    },
+    {
+      id: 'notes',
+      name: 'Notes',
+      icon: FileText,
+      component: NotesApp,
+      description: 'Take quick notes',
+      color: 'bg-yellow-500'
     },
     {
       id: 'slide-deck',
-      name: 'Slide Deck Editor',
-      icon: '🎯',
+      name: 'Aczen Deck',
+      icon: Presentation,
       component: SlideDeckEditor,
-      description: 'Create and edit presentation slides'
+      description: 'Create and edit presentation slides',
+      color: 'bg-purple-500'
     },
     {
       id: 'settings',
       name: 'Settings',
-      icon: '⚙️',
+      icon: Settings,
       component: SettingsApp,
-      description: 'System settings and preferences'
+      description: 'System settings and preferences',
+      color: 'bg-gray-600'
     }
   ];
 
@@ -170,33 +201,28 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
   if (!isVisible) return null;
 
   return (
-    <div className="app-launcher-container fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-      {/* App Launcher Button - Center */}
+    <div className="app-launcher-container">
+      {/* App Launcher Button - Bottom Left Corner */}
       <button
         onClick={handleToggle}
-        className={`pointer-events-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 backdrop-blur-lg ${
+        className={`fixed bottom-4 left-4 z-50 pointer-events-auto w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-md border ${
           isDarkMode 
-            ? 'bg-gray-800/80 hover:bg-gray-700/90 border border-gray-600/50' 
-            : 'bg-white/80 hover:bg-white/90 border border-gray-200/50'
-        } shadow-lg hover:shadow-xl ${isOpen ? 'scale-110' : ''}`}
+            ? 'bg-gray-800/80 hover:bg-gray-700/80 border-gray-600' 
+            : 'bg-white/80 hover:bg-gray-100/80 border-gray-200'
+        } shadow-lg`}
         title="App Launcher"
       >
         {isOpen ? (
-          <X className={`w-8 h-8 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
+          <X className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
         ) : (
-          <div className="grid grid-cols-2 gap-1">
-            <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-            <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-            <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-            <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`} />
-          </div>
+          <Grid3X3 className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
         )}
       </button>
 
       {/* App Grid Modal */}
       {isOpen && (
         <div 
-          className={`pointer-events-auto fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-8`}
+          className={`pointer-events-auto fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-8 z-40`}
           onClick={handleClose}
         >
           <div 
@@ -239,8 +265,8 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
                     }`}
                     title={app.description}
                   >
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-200">
-                      {app.icon}
+                    <div className={`w-12 h-12 rounded-lg ${app.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200 mx-auto`}>
+                      <app.icon className="w-6 h-6 text-white" />
                     </div>
                     <div className="text-sm font-medium text-center leading-tight">
                       {app.name}

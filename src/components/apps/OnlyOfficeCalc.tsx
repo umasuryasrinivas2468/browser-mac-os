@@ -8,7 +8,11 @@ declare global {
   }
 }
 
-const OnlyOfficeCalc: React.FC = () => {
+interface OnlyOfficeCalcProps {
+  initialContent?: any;
+}
+
+const OnlyOfficeCalc: React.FC<OnlyOfficeCalcProps> = ({ initialContent }) => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +25,12 @@ const OnlyOfficeCalc: React.FC = () => {
     // Check if API is already loaded
     if (window.DocsAPI) {
       setApiLoaded(true);
+      // If we have initial content, create a spreadsheet with it
+      if (initialContent) {
+        setTimeout(() => {
+          handleNewSpreadsheetWithContent(initialContent);
+        }, 500);
+      }
       return;
     }
 
@@ -33,6 +43,12 @@ const OnlyOfficeCalc: React.FC = () => {
         console.log('ONLYOFFICE API loaded successfully');
         setApiLoaded(true);
         setError(null);
+        // If we have initial content, create a spreadsheet with it
+        if (initialContent) {
+          setTimeout(() => {
+            handleNewSpreadsheetWithContent(initialContent);
+          }, 1000);
+        }
       };
       script.onerror = () => {
         console.error('Failed to load ONLYOFFICE API');
@@ -40,7 +56,7 @@ const OnlyOfficeCalc: React.FC = () => {
       };
       document.head.appendChild(script);
     }
-  }, []);
+  }, [initialContent]);
 
   const initializeEditor = (fileName: string, isNew: boolean = false) => {
     if (!window.DocsAPI || !editorRef.current) {
@@ -133,6 +149,47 @@ const OnlyOfficeCalc: React.FC = () => {
       type: 'calc',
       created: new Date().toISOString(),
       content: ''
+    }));
+
+    setTimeout(() => {
+      initializeEditor(fileName, true);
+    }, 500);
+  };
+
+  const handleNewSpreadsheetWithContent = (content: any) => {
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    const fileName = `${content.title || 'AI Generated Spreadsheet'}_${Date.now()}.xlsx`;
+    setCurrentFile(fileName);
+    
+    // Convert the AI generated content to a format suitable for spreadsheet
+    let spreadsheetContent = '';
+    if (content.headers && content.data) {
+      // Structured data with headers and rows
+      spreadsheetContent = `${content.headers.join('\t')}\n`;
+      if (Array.isArray(content.data)) {
+        spreadsheetContent += content.data.map((row: any) => 
+          Array.isArray(row) ? row.join('\t') : Object.values(row).join('\t')
+        ).join('\n');
+      }
+    } else {
+      spreadsheetContent = typeof content.content === 'string' 
+        ? content.content 
+        : JSON.stringify(content.content, null, 2);
+    }
+    
+    localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
+      name: fileName,
+      type: 'calc',
+      created: new Date().toISOString(),
+      content: spreadsheetContent,
+      aiGenerated: true,
+      originalContent: content
     }));
 
     setTimeout(() => {

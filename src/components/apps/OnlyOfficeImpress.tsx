@@ -8,7 +8,11 @@ declare global {
   }
 }
 
-const OnlyOfficeImpress: React.FC = () => {
+interface OnlyOfficeImpressProps {
+  initialContent?: any;
+}
+
+const OnlyOfficeImpress: React.FC<OnlyOfficeImpressProps> = ({ initialContent }) => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +25,12 @@ const OnlyOfficeImpress: React.FC = () => {
     // Check if API is already loaded
     if (window.DocsAPI) {
       setApiLoaded(true);
+      // If we have initial content, create a presentation with it
+      if (initialContent) {
+        setTimeout(() => {
+          handleNewPresentationWithContent(initialContent);
+        }, 500);
+      }
       return;
     }
 
@@ -33,6 +43,12 @@ const OnlyOfficeImpress: React.FC = () => {
         console.log('ONLYOFFICE API loaded successfully');
         setApiLoaded(true);
         setError(null);
+        // If we have initial content, create a presentation with it
+        if (initialContent) {
+          setTimeout(() => {
+            handleNewPresentationWithContent(initialContent);
+          }, 1000);
+        }
       };
       script.onerror = () => {
         console.error('Failed to load ONLYOFFICE API');
@@ -40,7 +56,7 @@ const OnlyOfficeImpress: React.FC = () => {
       };
       document.head.appendChild(script);
     }
-  }, []);
+  }, [initialContent]);
 
   const initializeEditor = (fileName: string, isNew: boolean = false) => {
     if (!window.DocsAPI || !editorRef.current) {
@@ -133,6 +149,43 @@ const OnlyOfficeImpress: React.FC = () => {
       type: 'impress',
       created: new Date().toISOString(),
       content: ''
+    }));
+
+    setTimeout(() => {
+      initializeEditor(fileName, true);
+    }, 500);
+  };
+
+  const handleNewPresentationWithContent = (content: any) => {
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    const fileName = `${content.title || 'AI Generated Presentation'}_${Date.now()}.pptx`;
+    setCurrentFile(fileName);
+    
+    // Convert the AI generated content to a format suitable for presentation
+    let presentationContent = '';
+    if (content.slides && Array.isArray(content.slides)) {
+      presentationContent = content.slides
+        .map((slide: any, index: number) => `Slide ${index + 1}: ${slide.title}\n${slide.content}\n\n`)
+        .join('');
+    } else {
+      presentationContent = typeof content.content === 'string' 
+        ? content.content 
+        : JSON.stringify(content.content, null, 2);
+    }
+    
+    localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
+      name: fileName,
+      type: 'impress',
+      created: new Date().toISOString(),
+      content: presentationContent,
+      aiGenerated: true,
+      originalContent: content
     }));
 
     setTimeout(() => {

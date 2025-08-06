@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Camera, Mountain, Info } from 'lucide-react';
@@ -6,7 +6,18 @@ import { Camera, Mountain, Info } from 'lucide-react';
 const WallpaperCredits: React.FC = () => {
   const { isDarkMode } = useOS();
   const [selectedContributor, setSelectedContributor] = useState<string | null>(null);
-  const [currentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every minute to ensure contributor changes
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(new Date());
+    };
+    
+    updateTime(); // Initial update
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Determine which contributor to show based on time
   const getContributor = () => {
@@ -29,19 +40,21 @@ const WallpaperCredits: React.FC = () => {
 
   const getContributorInfo = (name: string) => {
     switch (name) {
-      case 'Smran PIN':
+      case 'Smaran P':
         return {
-          name: 'Smran PIN',
+          name: 'Smaran P',
           description: 'A passionate nature photographer who captures the beauty of mornings and evenings through stunning landscape photography.',
           speciality: 'Morning & Evening Landscapes',
-          works: ['Sunrise captures', 'Golden hour photography', 'Mountain landscapes', 'Sunset compositions']
+          works: ['Sunrise captures', 'Golden hour photography', 'Mountain landscapes', 'Sunset compositions'],
+          image: null
         };
-      case 'Sharita Yen':
+      case 'Charita N':
         return {
-          name: 'Sharita Yen',
+          name: 'Charita N',
           description: 'An expert in daylight photography, specializing in vibrant afternoon scenes and natural lighting.',
           speciality: 'Afternoon Photography',
-          works: ['Daylight landscapes', 'Natural lighting', 'Afternoon scenes', 'Wildlife photography']
+          works: ['Daylight landscapes', 'Natural lighting', 'Afternoon scenes', 'Wildlife photography'],
+          image: 'https://media.licdn.com/dms/image/v2/D4E03AQEX5mKNJwyqiw/profile-displayphoto-shrink_400_400/B4EZZmsOnpH0Ag-/0/1745479592961?e=1757548800&v=beta&t=300LAsH21PrLtyBPGUPPnuM9TTm3fGgaypLJ7VWyVV4'
         };
       default:
         return null;
@@ -82,6 +95,16 @@ const WallpaperCredits: React.FC = () => {
               </DialogHeader>
               
               <div className="space-y-4">
+                {contributorInfo.image && (
+                  <div className="flex justify-center">
+                    <img 
+                      src={contributorInfo.image} 
+                      alt={contributorInfo.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-green-500"
+                    />
+                  </div>
+                )}
+                
                 <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                   <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     About the Photographer

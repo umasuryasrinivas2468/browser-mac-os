@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
 import MenuBar from './MenuBar';
@@ -15,9 +15,21 @@ const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
   const [showAppLauncher, setShowAppLauncher] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Update current date every minute to trigger wallpaper changes
+  useEffect(() => {
+    const updateDate = () => {
+      setCurrentDate(new Date());
+    };
+    
+    updateDate(); // Initial update
+    const interval = setInterval(updateDate, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
   
   // Use the dynamic wallpaper hook
-  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
+  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(currentDate);
 
   const handleSecurityClick = () => {
     console.log('Security clicked');

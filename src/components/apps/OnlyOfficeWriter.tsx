@@ -9,7 +9,11 @@ declare global {
   }
 }
 
-const OnlyOfficeWriter: React.FC = () => {
+interface OnlyOfficeWriterProps {
+  initialContent?: any;
+}
+
+const OnlyOfficeWriter: React.FC<OnlyOfficeWriterProps> = ({ initialContent }) => {
   const { isDarkMode } = useOS();
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +26,12 @@ const OnlyOfficeWriter: React.FC = () => {
     // Check if API is already loaded
     if (window.DocsAPI) {
       setApiLoaded(true);
+      // If we have initial content, create a document with it
+      if (initialContent) {
+        setTimeout(() => {
+          handleNewDocumentWithContent(initialContent);
+        }, 500);
+      }
       return;
     }
 
@@ -34,6 +44,12 @@ const OnlyOfficeWriter: React.FC = () => {
         console.log('ONLYOFFICE API loaded successfully');
         setApiLoaded(true);
         setError(null);
+        // If we have initial content, create a document with it
+        if (initialContent) {
+          setTimeout(() => {
+            handleNewDocumentWithContent(initialContent);
+          }, 1000);
+        }
       };
       script.onerror = () => {
         console.error('Failed to load ONLYOFFICE API');
@@ -41,7 +57,7 @@ const OnlyOfficeWriter: React.FC = () => {
       };
       document.head.appendChild(script);
     }
-  }, []);
+  }, [initialContent]);
 
   const initializeEditor = (fileName: string, isNew: boolean = false) => {
     if (!window.DocsAPI || !editorRef.current) {
@@ -134,6 +150,43 @@ const OnlyOfficeWriter: React.FC = () => {
       type: 'writer',
       created: new Date().toISOString(),
       content: ''
+    }));
+
+    setTimeout(() => {
+      initializeEditor(fileName, true);
+    }, 500);
+  };
+
+  const handleNewDocumentWithContent = (content: any) => {
+    if (!apiLoaded) {
+      setError('ONLYOFFICE API not loaded yet. Please wait...');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    const fileName = `${content.title || 'AI Generated Document'}_${Date.now()}.docx`;
+    setCurrentFile(fileName);
+    
+    // Convert the AI generated content to a format suitable for the document
+    let documentContent = '';
+    if (content.sections && Array.isArray(content.sections)) {
+      documentContent = content.sections
+        .map((section: any) => `${section.title}\n\n${section.content}\n\n`)
+        .join('');
+    } else {
+      documentContent = typeof content.content === 'string' 
+        ? content.content 
+        : JSON.stringify(content.content, null, 2);
+    }
+    
+    localStorage.setItem(`onlyoffice_${fileName}`, JSON.stringify({
+      name: fileName,
+      type: 'writer',
+      created: new Date().toISOString(),
+      content: documentContent,
+      aiGenerated: true,
+      originalContent: content
     }));
 
     setTimeout(() => {
