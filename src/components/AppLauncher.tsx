@@ -1,311 +1,203 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { X, Search } from 'lucide-react';
 import { 
-  Globe, 
+  Calculator, 
   FileText, 
-  Folder, 
+  Calendar, 
   Settings, 
-  Terminal,
-  Calculator,
-  Clock,
-  Calendar,
-  Building2,
-  Users,
-  Code,
+  Clock, 
+  Terminal, 
+  Browser,
+  Folder,
+  StickyNote,
+  Presentation,
   FileSpreadsheet,
-  Map
+  Search
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Import all app components
-import CalculatorApp from './apps/Calculator';
-import NotesApp from './apps/NotesApp';
+// Import all the app components
+import Calculator from './apps/Calculator';
 import TextEditor from './apps/TextEditor';
-import FileManager from './apps/FileManager';
-import WebBrowser from './apps/WebBrowser';
-import SettingsApp from './apps/SettingsApp';
 import CalendarApp from './apps/CalendarApp';
+import SettingsApp from './apps/SettingsApp';
 import ClockApp from './apps/ClockApp';
 import TerminalApp from './apps/TerminalApp';
-import MapsAppDemo from './apps/MapsAppDemo';
-import AczenSheetsApp from './apps/AczenSheetsApp';
+import BrowserApp from './apps/BrowserApp';
+import FileManager from './apps/FileManager';
+import NotesApp from './apps/NotesApp';
 import SlideDeckEditor from './apps/SlideDeckEditor';
-import OnlyOfficeWriter from './apps/OnlyOfficeWriter';
-import OnlyOfficeCalc from './apps/OnlyOfficeCalc';
-import OnlyOfficeImpress from './apps/OnlyOfficeImpress';
-import AczenBilzApp from './apps/AczenBilzApp';
-import AczenCRMApp from './apps/AczenCRMApp';
-import AczenIDEApp from './apps/AczenIDEApp';
+import SpreadsheetApp from './apps/SpreadsheetApp';
+import PerplexityApp from './apps/PerplexityApp';
 
-const AppLauncher: React.FC = () => {
+interface App {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  component: React.ComponentType<any>;
+  category: 'productivity' | 'utilities' | 'media' | 'development';
+}
+
+const apps: App[] = [
+  // Productivity
+  {
+    id: 'texteditor',
+    title: 'Text Editor',
+    icon: <FileText className="w-6 h-6" />,
+    component: TextEditor,
+    category: 'productivity'
+  },
+  {
+    id: 'notes',
+    title: 'Notes',
+    icon: <StickyNote className="w-6 h-6" />,
+    component: NotesApp,
+    category: 'productivity'
+  },
+  {
+    id: 'slides',
+    title: 'Slide Deck',
+    icon: <Presentation className="w-6 h-6" />,
+    component: SlideDeckEditor,
+    category: 'productivity'
+  },
+  {
+    id: 'spreadsheet',
+    title: 'Spreadsheet',
+    icon: <FileSpreadsheet className="w-6 h-6" />,
+    component: SpreadsheetApp,
+    category: 'productivity'
+  },
+  {
+    id: 'calendar',
+    title: 'Calendar',
+    icon: <Calendar className="w-6 h-6" />,
+    component: CalendarApp,
+    category: 'productivity'
+  },
+  
+  // Utilities
+  {
+    id: 'filemanager',
+    title: 'File Manager',
+    icon: <Folder className="w-6 h-6" />,
+    component: FileManager,
+    category: 'utilities'
+  },
+  {
+    id: 'calculator',
+    title: 'Calculator',
+    icon: <Calculator className="w-6 h-6" />,
+    component: Calculator,
+    category: 'utilities'
+  },
+  {
+    id: 'clock',
+    title: 'Clock',
+    icon: <Clock className="w-6 h-6" />,
+    component: ClockApp,
+    category: 'utilities'
+  },
+  {
+    id: 'search',
+    title: 'Perplexity',
+    icon: <Search className="w-6 h-6" />,
+    component: PerplexityApp,
+    category: 'utilities'
+  },
+  
+  // Development
+  {
+    id: 'terminal',
+    title: 'Terminal',
+    icon: <Terminal className="w-6 h-6" />,
+    component: TerminalApp,
+    category: 'development'
+  },
+  {
+    id: 'browser',
+    title: 'Browser',
+    icon: <Browser className="w-6 h-6" />,
+    component: BrowserApp,
+    category: 'development'
+  },
+  {
+    id: 'settings',
+    title: 'Settings',
+    icon: <Settings className="w-6 h-6" />,
+    component: SettingsApp,
+    category: 'utilities'
+  }
+];
+
+interface AppLauncherProps {
+  onClose: () => void;
+}
+
+const AppLauncher: React.FC<AppLauncherProps> = ({ onClose }) => {
   const { isDarkMode, openWindow } = useOS();
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const apps = [
-    {
-      id: 'browser',
-      name: 'Web Browser',
-      icon: Globe,
-      component: WebBrowser,
-      description: 'Browse the internet',
-      color: 'bg-blue-500'
-    },
-    {
-      id: 'texteditor',
-      name: 'TextEdit',
-      icon: FileText,
-      component: TextEditor,
-      description: 'Rich text editor with formatting',
-      color: 'bg-blue-600'
-    },
-    {
-      id: 'calculator',
-      name: 'Calculator',
-      icon: Calculator,
-      component: CalculatorApp,
-      description: 'Basic arithmetic calculator',
-      color: 'bg-orange-500'
-    },
-    {
-      id: 'clock',
-      name: 'Clock',
-      icon: Clock,
-      component: ClockApp,
-      description: 'World clock and timers',
-      color: 'bg-indigo-500'
-    },
-    {
-      id: 'calendar',
-      name: 'Calendar',
-      icon: Calendar,
-      component: CalendarApp,
-      description: 'Calendar and scheduling',
-      color: 'bg-red-500'
-    },
-    {
-      id: 'aczen-bilz',
-      name: 'Aczen Bilz',
-      icon: Building2,
-      component: AczenBilzApp,
-      description: 'Business management',
-      color: 'bg-blue-600'
-    },
-    {
-      id: 'aczen-crm',
-      name: 'Aczen CRM',
-      icon: Users,
-      component: AczenCRMApp,
-      description: 'Customer relationship management',
-      color: 'bg-green-500'
-    },
-    {
-      id: 'aczen-ide',
-      name: 'Aczen IDE',
-      icon: Code,
-      component: AczenIDEApp,
-      description: 'Integrated development environment',
-      color: 'bg-purple-500'
-    },
-    {
-      id: 'maps',
-      name: 'Maps',
-      icon: Map,
-      component: MapsAppDemo,
-      description: 'Interactive maps',
-      color: 'bg-green-500'
-    },
-    {
-      id: 'files',
-      name: 'Files',
-      icon: Folder,
-      component: FileManager,
-      description: 'Manage your files and folders',
-      color: 'bg-blue-600'
-    },
-    {
-      id: 'terminal',
-      name: 'Terminal',
-      icon: Terminal,
-      component: TerminalApp,
-      description: 'Command line interface',
-      color: 'bg-gray-800'
-    },
-    {
-      id: 'notes',
-      name: 'Notes',
-      icon: FileText,
-      component: NotesApp,
-      description: 'Take quick notes',
-      color: 'bg-yellow-500'
-    },
-    {
-      id: 'slide-deck',
-      name: 'Slide Deck Editor',
-      icon: FileText,
-      component: SlideDeckEditor,
-      description: 'Create and edit presentation slides',
-      color: 'bg-purple-600'
-    },
-    {
-      id: 'onlyoffice-writer',
-      name: 'OnlyOffice Writer',
-      icon: FileText,
-      component: OnlyOfficeWriter,
-      description: 'Professional document editor',
-      color: 'bg-blue-700'
-    },
-    {
-      id: 'onlyoffice-calc',
-      name: 'OnlyOffice Calc',
-      icon: FileSpreadsheet,
-      component: OnlyOfficeCalc,
-      description: 'Professional spreadsheet editor',
-      color: 'bg-green-700'
-    },
-    {
-      id: 'onlyoffice-impress',
-      name: 'OnlyOffice Impress',
-      icon: FileText,
-      component: OnlyOfficeImpress,
-      description: 'Professional presentation editor',
-      color: 'bg-red-600'
-    },
-    {
-      id: 'settings',
-      name: 'Settings',
-      icon: Settings,
-      component: SettingsApp,
-      description: 'System settings and preferences',
-      color: 'bg-gray-600'
-    }
-  ];
-
-  const filteredApps = apps.filter(app =>
-    app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    app.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAppClick = (app: any) => {
+  const handleAppClick = (app: App) => {
     openWindow({
       id: app.id,
-      title: app.name,
+      title: app.title,
       component: app.component,
     });
-    setIsOpen(false);
-    setSearchQuery('');
+    onClose();
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.app-launcher')) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  const categories = [
+    { id: 'productivity', name: 'Productivity' },
+    { id: 'utilities', name: 'Utilities' },
+    { id: 'development', name: 'Development' }
+  ];
 
   return (
-    <>
-      <div className="app-launcher fixed bottom-4 left-4 z-30">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 backdrop-blur-lg ${
-            isDarkMode 
-              ? 'bg-gray-800/80 hover:bg-gray-700/90 border border-gray-600/50' 
-              : 'bg-white/80 hover:bg-white/90 border border-gray-200/50'
-          } shadow-lg hover:shadow-xl`}
-          title="App Launcher"
-        >
-          {isOpen ? (
-            <X className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`} />
-          ) : (
-            <div className="w-6 h-6 grid grid-cols-2 gap-1">
-              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
-              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
-              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
-              <div className={`w-2 h-2 rounded-sm ${isDarkMode ? 'bg-white' : 'bg-gray-900'}`}></div>
-            </div>
-          )}
-        </button>
-      </div>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div 
-            className={`app-launcher w-[900px] h-[700px] rounded-xl shadow-2xl backdrop-blur-lg border ${
-              isDarkMode 
-                ? 'bg-gray-800/95 border-gray-600/50' 
-                : 'bg-white/95 border-gray-200/50'
-            } p-6 flex flex-col`}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                Applications
-              </h2>
-              <button
-                onClick={() => setIsOpen(false)}
-                className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                  isDarkMode ? 'text-white' : 'text-gray-600'
-                }`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative mb-6">
-              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search applications..."
-                className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
-                  isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
-            </div>
-
-            {/* Apps Grid */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="grid grid-cols-6 gap-6">
-                {filteredApps.map((app) => (
+    <div className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50`}>
+      <div className={`w-full max-w-4xl h-3/4 rounded-lg shadow-2xl overflow-hidden ${
+        isDarkMode ? 'bg-gray-900' : 'bg-white'
+      }`}>
+        <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Applications</h2>
+            <Button onClick={onClose} variant="ghost" size="sm">
+              ×
+            </Button>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto h-full">
+          {categories.map(category => (
+            <div key={category.id} className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-gray-600 dark:text-gray-400">
+                {category.name}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {apps.filter(app => app.category === category.id).map((app) => (
                   <button
                     key={app.id}
                     onClick={() => handleAppClick(app)}
-                    className={`p-6 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-3 ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-700/50 text-white' 
-                        : 'hover:bg-gray-100/50 text-gray-900'
+                    className={`p-4 rounded-lg text-center transition-all duration-200 hover:scale-105 ${
+                      isDarkMode
+                        ? 'bg-gray-800 hover:bg-gray-700 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     }`}
-                    title={app.description}
                   >
-                    <div className={`w-12 h-12 ${app.color} rounded-lg flex items-center justify-center shadow-md`}>
-                      <app.icon className="w-6 h-6 text-white" />
+                    <div className="flex flex-col items-center space-y-2">
+                      {app.icon}
+                      <span className="text-sm font-medium truncate w-full">
+                        {app.title}
+                      </span>
                     </div>
-                    <div className="text-xs font-medium text-center leading-tight">{app.name}</div>
                   </button>
                 ))}
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

@@ -1,348 +1,175 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight, 
-  Save,
-  FileDown,
-  Type,
-  Palette
-} from 'lucide-react';
+import { Save, FileText, WrapText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import jsPDF from 'jspdf';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface TextEditorProps {
-  initialFileName?: string;
-}
-
-interface FileItem {
-  type: 'file' | 'folder';
-  children?: { [key: string]: FileItem };
-  content?: string;
-  savedAt?: string;
-}
-
-const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
+const TextEditor: React.FC = () => {
   const { isDarkMode } = useOS();
   const [content, setContent] = useState('');
-  const [fileName, setFileName] = useState(initialFileName || 'Untitled Document');
   const [fontSize, setFontSize] = useState(14);
-  const [fontFamily, setFontFamily] = useState('Arial');
-  const [textColor, setTextColor] = useState('#000000');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [wordWrap, setWordWrap] = useState(true);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [saveAsType, setSaveAsType] = useState<'txt' | 'pdf' | 'ppt'>('txt');
 
-  // Load file content if initialFileName is provided
-  useEffect(() => {
-    if (initialFileName) {
-      const fileStructureStr = localStorage.getItem('filemanager_structure');
-      if (!fileStructureStr) return;
-      
-      try {
-        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-        
-        // Search for the file in the structure
-        const findFile = (structure: { [key: string]: FileItem }, path: string[] = []): string | null => {
-          for (const [key, value] of Object.entries(structure)) {
-            if (key === initialFileName && value.type === 'file') {
-              return value.content || '';
-            }
-            if (value.type === 'folder' && value.children) {
-              const result = findFile(value.children, [...path, key]);
-              if (result !== null) return result;
-            }
-          }
-          return null;
-        };
-
-        const fileContent = findFile(fileStructure);
-        if (fileContent) {
-          setContent(fileContent);
-        }
-      } catch (error) {
-        console.error('Error parsing file structure:', error);
-      }
-    }
-  }, [initialFileName]);
-
-  const formatText = (command: string, value?: string) => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      document.execCommand(command, false, value);
-    }
+  const handleSaveClick = () => {
+    setShowSaveDialog(true);
+    setFileName('untitled');
+    setSaveAsType('txt');
   };
 
-  const applyFormat = (format: string) => {
-    switch (format) {
-      case 'bold':
-        formatText('bold');
-        break;
-      case 'italic':
-        formatText('italic');
-        break;
-      case 'underline':
-        formatText('underline');
-        break;
-      case 'align-left':
-        formatText('justifyLeft');
-        break;
-      case 'align-center':
-        formatText('justifyCenter');
-        break;
-      case 'align-right':
-        formatText('justifyRight');
-        break;
-      default:
-        break;
-    }
-  };
+  const handleSaveFile = () => {
+    if (!fileName.trim()) return;
 
-  const saveFile = () => {
-    const fileStructureStr = localStorage.getItem('filemanager_structure');
-    if (!fileStructureStr) return;
+    const fileStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
     
-    try {
-      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-
-      // Find the file in the structure
-      const updateFile = (structure: { [key: string]: FileItem }, path: string[] = []): boolean => {
-        for (const [key, value] of Object.entries(structure)) {
-          if (key === fileName && value.type === 'file') {
-            value.content = content;
-            return true;
-          }
-          if (value.type === 'folder' && value.children) {
-            const result = updateFile(value.children, [...path, key]);
-            if (result) return result;
-          }
-        }
-        return false;
-      };
-
-      updateFile(fileStructure);
-      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-    } catch (error) {
-      console.error('Error updating file structure:', error);
+    // Ensure Documents folder exists
+    if (!fileStructure.Home) fileStructure.Home = { type: 'folder', children: {} };
+    if (!fileStructure.Home.children) fileStructure.Home.children = {};
+    if (!fileStructure.Home.children.Documents) {
+      fileStructure.Home.children.Documents = { type: 'folder', children: {} };
     }
-  };
-
-  const saveAsPDF = () => {
-    const pdf = new jsPDF();
-    const lines = content.split('\n');
-    let yPosition = 20;
-    
-    // Add title
-    pdf.setFontSize(16);
-    pdf.text(fileName, 20, yPosition);
-    yPosition += 20;
-    
-    // Add content
-    pdf.setFontSize(12);
-    lines.forEach((line) => {
-      if (yPosition > 280) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, 20, yPosition);
-      yPosition += 10;
-    });
-
-    const pdfFileName = `${fileName}.pdf`;
-
-    // Save to Downloads folder in file structure
-    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
-    try {
-      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-      
-      // Ensure Downloads folder structure exists
-      if (!fileStructure.Downloads) {
-        fileStructure.Downloads = {
-          type: 'folder',
-          children: {}
-        };
-      }
-      if (!fileStructure.Downloads.children) {
-        fileStructure.Downloads.children = {};
-      }
-      
-      // Add PDF to Downloads with special content format for viewing
-      fileStructure.Downloads.children[pdfFileName] = {
-        type: 'file',
-        content: `PDF_DOCUMENT:${fileName}\n\n${content}`,
-        savedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-    } catch (error) {
-      console.error('Error saving PDF to file structure:', error);
+    if (!fileStructure.Home.children.Documents.children) {
+      fileStructure.Home.children.Documents.children = {};
     }
 
-    pdf.save(pdfFileName);
-  };
+    let fileContent = content;
+    let fileExtension = '.txt';
 
-  const saveAsPPT = () => {
-    const pptFileName = `${fileName}.pptx`;
-    
-    // Save to Downloads folder in file structure
-    const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
-    try {
-      const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-      
-      // Ensure Downloads folder structure exists
-      if (!fileStructure.Downloads) {
-        fileStructure.Downloads = {
-          type: 'folder',
-          children: {}
-        };
-      }
-      if (!fileStructure.Downloads.children) {
-        fileStructure.Downloads.children = {};
-      }
-      
-      // Add PPT to Downloads with special content format for editing
-      fileStructure.Downloads.children[pptFileName] = {
-        type: 'file',
-        content: `PPT_DOCUMENT:${fileName}\n\n${content}`,
-        savedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-    } catch (error) {
-      console.error('Error saving PPT to file structure:', error);
+    if (saveAsType === 'pdf') {
+      fileContent = `PDF_DOCUMENT:${fileName}\n\n${content}`;
+      fileExtension = '.pdf';
+    } else if (saveAsType === 'ppt') {
+      fileContent = `PPT_DOCUMENT:${fileName}\n\n${content}`;
+      fileExtension = '.ppt';
     }
 
-    // Create and download PPT file
-    const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = pptFileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    const finalFileName = fileName + fileExtension;
+    fileStructure.Home.children.Documents.children[finalFileName] = {
+      type: 'file',
+      content: fileContent,
+      savedAt: new Date().toISOString()
+    };
 
-  const saveAsDoc = () => {
-    const blob = new Blob([content], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName}.doc`;
-
-    // Save to Downloads folder in file structure
-    const fileStructureStr = localStorage.getItem('filemanager_structure');
-    if (fileStructureStr) {
-      try {
-        const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-        const docFileName = `${fileName}.doc`;
-        
-        // Navigate to Downloads folder and add the DOC
-        if (fileStructure.Home?.children?.Downloads?.children) {
-          fileStructure.Home.children.Downloads.children[docFileName] = {
-            type: 'file',
-            content: content,
-            savedAt: new Date().toISOString()
-          };
-          localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
-        }
-      } catch (error) {
-        console.error('Error saving DOC to file structure:', error);
-      }
-    }
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    setShowSaveDialog(false);
+    setFileName('');
   };
 
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* Toolbar */}
-      <div className={`flex items-center space-x-2 p-3 border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
-        <Button onClick={() => applyFormat('bold')} size="sm" variant="ghost">
-          <Bold className="w-4 h-4" />
-        </Button>
-        <Button onClick={() => applyFormat('italic')} size="sm" variant="ghost">
-          <Italic className="w-4 h-4" />
-        </Button>
-        <Button onClick={() => applyFormat('underline')} size="sm" variant="ghost">
-          <Underline className="w-4 h-4" />
-        </Button>
-        <div className="w-px h-5 bg-gray-400" />
-        <Button onClick={() => applyFormat('align-left')} size="sm" variant="ghost">
-          <AlignLeft className="w-4 h-4" />
-        </Button>
-        <Button onClick={() => applyFormat('align-center')} size="sm" variant="ghost">
-          <AlignCenter className="w-4 h-4" />
-        </Button>
-        <Button onClick={() => applyFormat('align-right')} size="sm" variant="ghost">
-          <AlignRight className="w-4 h-4" />
-        </Button>
-        <div className="w-px h-5 bg-gray-400" />
-        <select
-          value={fontSize}
-          onChange={(e) => setFontSize(parseInt(e.target.value))}
-          className={`bg-transparent border rounded-md px-2 py-1 text-sm ${isDarkMode ? 'border-gray-600 text-white' : 'border-gray-300 text-gray-700'}`}
-        >
-          {[12, 14, 16, 18, 20, 24, 30, 36].map((size) => (
-            <option key={size} value={size}>{size}px</option>
-          ))}
-        </select>
-        <select
-          value={fontFamily}
-          onChange={(e) => setFontFamily(e.target.value)}
-          className={`bg-transparent border rounded-md px-2 py-1 text-sm ${isDarkMode ? 'border-gray-600 text-white' : 'border-gray-300 text-gray-700'}`}
-        >
-          {['Arial', 'Helvetica', 'Times New Roman', 'Courier New'].map((font) => (
-            <option key={font} value={font}>{font}</option>
-          ))}
-        </select>
-        <input
-          type="color"
-          value={textColor}
-          onChange={(e) => setTextColor(e.target.value)}
-          className="h-8 w-8 rounded-md border-none"
-        />
-        <div className="w-px h-5 bg-gray-400" />
-        <Button onClick={saveFile} size="sm">
-          <Save className="w-4 h-4 mr-2" />
-          Save
-        </Button>
-        <Button onClick={saveAsPDF} size="sm" variant="outline">
-          <FileDown className="w-4 h-4 mr-2" />
-          Save as PDF
-        </Button>
-        <Button onClick={saveAsPPT} size="sm" variant="outline">
-          <FileDown className="w-4 h-4 mr-2" />
-          Save as PPT
-        </Button>
+      <div className={`flex items-center justify-between p-2 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleSaveClick} size="sm" variant="ghost">
+            <Save className="w-4 h-4 mr-1" />
+            Save
+          </Button>
+          <Button onClick={() => setContent('')} size="sm" variant="ghost">
+            <FileText className="w-4 h-4 mr-1" />
+            New
+          </Button>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <span className="text-sm">Font Size:</span>
+          <select
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+            className={`px-2 py-1 rounded border ${
+              isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+            }`}
+          >
+            <option value={10}>10px</option>
+            <option value={12}>12px</option>
+            <option value={14}>14px</option>
+            <option value={16}>16px</option>
+            <option value={18}>18px</option>
+            <option value={20}>20px</option>
+            <option value={24}>24px</option>
+          </select>
+          
+          <Button
+            onClick={() => setWordWrap(!wordWrap)}
+            size="sm"
+            variant={wordWrap ? "default" : "ghost"}
+          >
+            <WrapText className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Text Area */}
-      <div className="flex-1 p-4">
+      {/* Editor */}
+      <div className="flex-1 relative">
         <textarea
-          ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Start typing your document..."
-          className={`w-full h-full resize-none border rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            isDarkMode 
-              ? 'bg-gray-800 text-white border-gray-600' 
-              : 'bg-white text-gray-900 border-gray-300'
+          className={`w-full h-full p-4 border-none outline-none resize-none font-mono ${
+            isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
           }`}
           style={{
             fontSize: `${fontSize}px`,
-            fontFamily,
-            color: textColor,
-            lineHeight: '1.6'
+            whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
           }}
+          placeholder="Start typing..."
         />
       </div>
+
+      {/* Save Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className={`p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 ${
+            isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+          }`}>
+            <h3 className="text-lg font-semibold mb-4">Save File</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">File Name:</label>
+                <Input
+                  type="text"
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
+                  placeholder="Enter filename"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Save as:</label>
+                <Select value={saveAsType} onValueChange={(value: 'txt' | 'pdf' | 'ppt') => setSaveAsType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="txt">Text File (.txt)</SelectItem>
+                    <SelectItem value="pdf">PDF Document (.pdf)</SelectItem>
+                    <SelectItem value="ppt">PowerPoint (.ppt)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button
+                onClick={() => setShowSaveDialog(false)}
+                variant="outline"
+                size="sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveFile}
+                size="sm"
+                disabled={!fileName.trim()}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

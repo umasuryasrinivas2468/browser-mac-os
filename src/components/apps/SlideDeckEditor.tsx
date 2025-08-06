@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -217,6 +216,38 @@ const SlideDeckEditor: React.FC = () => {
     pdf.save(fileName);
   };
 
+  const savePresentationToFileManager = () => {
+    // Get or create the file structure
+    const fileStructure = JSON.parse(localStorage.getItem('filemanager_structure') || '{}');
+    
+    // Ensure Documents folder exists
+    if (!fileStructure.Home) fileStructure.Home = { type: 'folder', children: {} };
+    if (!fileStructure.Home.children) fileStructure.Home.children = {};
+    if (!fileStructure.Home.children.Documents) {
+      fileStructure.Home.children.Documents = { type: 'folder', children: {} };
+    }
+    if (!fileStructure.Home.children.Documents.children) {
+      fileStructure.Home.children.Documents.children = {};
+    }
+
+    // Create presentation content
+    const presentationContent = `PPT_DOCUMENT:Slide Deck Presentation\n\n${slides.map(slide => 
+      `Slide: ${slide.title}\nContent: ${slide.content}\nSpeaker Notes: ${slide.speakerNotes}\n---\n`
+    ).join('')}`;
+
+    const fileName = `presentation_${Date.now()}.ppt`;
+    fileStructure.Home.children.Documents.children[fileName] = {
+      type: 'file',
+      content: presentationContent,
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
+    
+    // Show success message (you can add a toast here if needed)
+    console.log('Presentation saved to Documents folder');
+  };
+
   const currentSlide = slides[currentSlideIndex];
 
   if (isPresenterMode) {
@@ -367,6 +398,10 @@ const SlideDeckEditor: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
+            <Button onClick={savePresentationToFileManager} size="sm" variant="outline">
+              <FileText className="w-4 h-4 mr-1" />
+              Save
+            </Button>
             <Button onClick={() => setIsPresenterMode(true)} size="sm">
               <Play className="w-4 h-4 mr-1" />
               Present
