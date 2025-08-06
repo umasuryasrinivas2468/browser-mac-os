@@ -39,10 +39,9 @@ interface PopupApp {
 
 interface PopupAppsProps {
   onWindowOpen?: () => void;
-  onClose?: () => void;
 }
 
-const PopupApps: React.FC<PopupAppsProps> = ({ onWindowOpen = () => {}, onClose }) => {
+const PopupApps: React.FC<PopupAppsProps> = ({ onWindowOpen = () => {} }) => {
   const { isDarkMode } = useOS();
   const [showLauncher, setShowLauncher] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,9 +145,6 @@ const PopupApps: React.FC<PopupAppsProps> = ({ onWindowOpen = () => {}, onClose 
   const handleLauncherClose = () => {
     setShowLauncher(false);
     setSearchQuery('');
-    if (onClose) {
-      onClose();
-    }
   };
 
   // Listen for toggle event

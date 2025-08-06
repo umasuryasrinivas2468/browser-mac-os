@@ -14,17 +14,16 @@ import CopyProtection from './CopyProtection';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
-  const [showAppLauncher, setShowAppLauncher] = useState(false);
   
-  // Use the fixed dynamic wallpaper hook
-  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper();
+  // Use the dynamic wallpaper hook
+  const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
 
   const handleSecurityClick = () => {
     console.log('Security clicked');
   };
 
   const handlePopularAppsClick = () => {
-    setShowAppLauncher(true);
+    console.log('Popular apps clicked');
   };
 
   const handleSearchClick = () => {
@@ -38,7 +37,7 @@ const Desktop: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative">
+    <div className={`min-h-screen w-full relative transition-all duration-500 ${backgroundClass}`}>
       {/* Copy Protection */}
       <CopyProtection />
       
@@ -50,7 +49,7 @@ const Desktop: React.FC = () => {
       
       <DesktopClock />
       
-      {/* Wallpaper Credits */}
+      {/* Wallpaper Credits - positioned at bottom left corner */}
       <WallpaperCredits />
       
       {windows.map((window) => (
@@ -63,16 +62,9 @@ const Desktop: React.FC = () => {
         onMouseEnter={handleMouseEnterBottom}
       />
       
-      {/* Bottom Icons - AI Search */}
+      {/* Bottom Icons - App Launcher and AI Search */}
+      <AppLauncher />
       <DesktopSearchBar />
-      
-      {/* App Launcher - Always visible */}
-      <AppLauncher onClose={() => {}} />
-      
-      {/* App Launcher Modal */}
-      {showAppLauncher && (
-        <AppLauncher onClose={() => setShowAppLauncher(false)} />
-      )}
       
       <Dock />
     </div>
