@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Folder, 
@@ -20,6 +19,8 @@ import {
   Home,
   FolderOpen
 } from 'lucide-react';
+import PDFViewer from './PDFViewer';
+import PPTEditor from './PPTEditor';
 
 interface FileItem {
   type: 'file' | 'folder';
@@ -39,6 +40,8 @@ const FileManager: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [previewFile, setPreviewFile] = useState<{ name: string; content: string } | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ name: string; item: FileItem } | null>(null);
+  const [showPDFViewer, setShowPDFViewer] = useState<{ fileName: string; content: string } | null>(null);
+  const [showPPTEditor, setShowPPTEditor] = useState<{ fileName: string; content: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize file structure
@@ -168,14 +171,27 @@ const FileManager: React.FC = () => {
       
       if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '')) {
         setPreviewFile({ name, content: item.content || '' });
-      } else if (extension === 'pdf' && item.content?.startsWith('PDF_CONTENT:')) {
-        const content = item.content.replace('PDF_CONTENT:', '');
-        setPreviewFile({ name, content: `PDF Document: ${name}\n\n${content}` });
-      } else if (['pptx', 'ppt'].includes(extension || '') && item.content?.startsWith('PPT_CONTENT:')) {
-        const content = item.content.replace('PPT_CONTENT:', '');
-        setPreviewFile({ name, content: `PowerPoint Presentation: ${name}\n\n${content}` });
+      } else if (extension === 'pdf' && item.content?.startsWith('PDF_DOCUMENT:')) {
+        setShowPDFViewer({ fileName: name, content: item.content });
+      } else if (['pptx', 'ppt'].includes(extension || '') && item.content?.startsWith('PPT_DOCUMENT:')) {
+        setShowPPTEditor({ fileName: name, content: item.content });
+      } else if (extension === 'txt' || !extension) {
+        setPreviewFile({ name, content: item.content || '' });
       }
     }
+  };
+
+  const handlePPTSave = (fileName: string, newContent: string) => {
+    const updatedStructure = { ...fileStructure };
+    const currentContents = getCurrentFolderContents();
+    
+    if (currentContents[fileName]) {
+      currentContents[fileName].content = newContent;
+      currentContents[fileName].savedAt = new Date().toISOString();
+    }
+    
+    setFileStructure(updatedStructure);
+    localStorage.setItem('filemanager_structure', JSON.stringify(updatedStructure));
   };
 
   const handleGoBack = () => {
@@ -239,7 +255,11 @@ const FileManager: React.FC = () => {
           {leftPanelFolders.map((folder) => (
             <button
               key={folder.path}
-              onClick={() => handleFolderSelect(folder.path)}
+              onClick={() => {
+                setSelectedFolder(folder.path);
+                setCurrentPath('/');
+                setSelectedFile(null);
+              }}
               className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
                 selectedFolder === folder.path
                   ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
@@ -265,7 +285,7 @@ const FileManager: React.FC = () => {
                     className="w-full flex items-center space-x-2 p-2 rounded text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <FolderOpen className="w-4 h-4" />
-                    <span>{name}</span>
+                    <span className="truncate">{name}</span>
                   </button>
                 )
               ))}
@@ -353,8 +373,8 @@ const FileManager: React.FC = () => {
                     <div className="flex items-center justify-center">
                       {getFileIcon(name, item)}
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate w-full">
+                    <div className="text-center w-full">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate w-full" title={name}>
                         {name}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -385,7 +405,7 @@ const FileManager: React.FC = () => {
                 >
                   {getFileIcon(name, item)}
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={name}>
                       {name}
                     </div>
                   </div>
@@ -401,6 +421,25 @@ const FileManager: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* PDF Viewer Modal */}
+      {showPDFViewer && (
+        <PDFViewer
+          fileName={showPDFViewer.fileName}
+          content={showPDFViewer.content}
+          onClose={() => setShowPDFViewer(null)}
+        />
+      )}
+
+      {/* PPT Editor Modal */}
+      {showPPTEditor && (
+        <PPTEditor
+          fileName={showPPTEditor.fileName}
+          content={showPPTEditor.content}
+          onClose={() => setShowPPTEditor(null)}
+          onSave={(newContent) => handlePPTSave(showPPTEditor.fileName, newContent)}
+        />
+      )}
 
       {/* File Preview Modal */}
       {previewFile && (

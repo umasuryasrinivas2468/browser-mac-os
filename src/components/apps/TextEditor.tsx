@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -135,6 +134,13 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
     const lines = content.split('\n');
     let yPosition = 20;
     
+    // Add title
+    pdf.setFontSize(16);
+    pdf.text(fileName, 20, yPosition);
+    yPosition += 20;
+    
+    // Add content
+    pdf.setFontSize(12);
     lines.forEach((line) => {
       if (yPosition > 280) {
         pdf.addPage();
@@ -162,10 +168,10 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         fileStructure.Downloads.children = {};
       }
       
-      // Add PDF to Downloads with PDF content marker
+      // Add PDF to Downloads with special content format for viewing
       fileStructure.Downloads.children[pdfFileName] = {
         type: 'file',
-        content: `PDF_CONTENT:${content}`,
+        content: `PDF_DOCUMENT:${fileName}\n\n${content}`,
         savedAt: new Date().toISOString()
       };
       
@@ -178,14 +184,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
   };
 
   const saveAsPPT = () => {
-    // Create PPT content marker
-    const pptContent = `PPT_CONTENT:${content}`;
+    const pptFileName = `${fileName}.pptx`;
     
     // Save to Downloads folder in file structure
     const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
     try {
       const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-      const pptFileName = `${fileName}.pptx`;
       
       // Ensure Downloads folder structure exists
       if (!fileStructure.Downloads) {
@@ -198,10 +202,10 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         fileStructure.Downloads.children = {};
       }
       
-      // Add PPT to Downloads
+      // Add PPT to Downloads with special content format for editing
       fileStructure.Downloads.children[pptFileName] = {
         type: 'file',
-        content: pptContent,
+        content: `PPT_DOCUMENT:${fileName}\n\n${content}`,
         savedAt: new Date().toISOString()
       };
       
@@ -215,7 +219,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${fileName}.pptx`;
+    a.download = pptFileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

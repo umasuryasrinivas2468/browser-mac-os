@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Plus, Search, Trash2, FileDown } from 'lucide-react';
@@ -118,10 +117,10 @@ const NotesApp: React.FC = () => {
         fileStructure.Downloads.children = {};
       }
       
-      // Add PDF to Downloads
+      // Add PDF to Downloads with special format for viewing
       fileStructure.Downloads.children[pdfFileName] = {
         type: 'file',
-        content: `PDF_CONTENT:${selectedNote.content}`,
+        content: `PDF_DOCUMENT:${selectedNote.title}\n\n${selectedNote.content}`,
         savedAt: new Date().toISOString()
       };
       
@@ -154,10 +153,10 @@ const NotesApp: React.FC = () => {
         fileStructure.Downloads.children = {};
       }
       
-      // Add PPT to Downloads
+      // Add PPT to Downloads with special format for editing
       fileStructure.Downloads.children[pptFileName] = {
         type: 'file',
-        content: `PPT_CONTENT:${selectedNote.content}`,
+        content: `PPT_DOCUMENT:${selectedNote.title}\n\n${selectedNote.content}`,
         savedAt: new Date().toISOString()
       };
       
