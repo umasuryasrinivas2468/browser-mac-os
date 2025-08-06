@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
@@ -13,6 +14,7 @@ import CopyProtection from './CopyProtection';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
+  const [showAppLauncher, setShowAppLauncher] = useState(false);
   
   // Use the fixed dynamic wallpaper hook
   const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper();
@@ -22,7 +24,7 @@ const Desktop: React.FC = () => {
   };
 
   const handlePopularAppsClick = () => {
-    console.log('Popular apps clicked');
+    setShowAppLauncher(true);
   };
 
   const handleSearchClick = () => {
@@ -61,9 +63,13 @@ const Desktop: React.FC = () => {
         onMouseEnter={handleMouseEnterBottom}
       />
       
-      {/* Bottom Icons - App Launcher and AI Search */}
-      <AppLauncher />
+      {/* Bottom Icons - AI Search */}
       <DesktopSearchBar />
+      
+      {/* App Launcher Modal */}
+      {showAppLauncher && (
+        <AppLauncher onClose={() => setShowAppLauncher(false)} />
+      )}
       
       <Dock />
     </div>

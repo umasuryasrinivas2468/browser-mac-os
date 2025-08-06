@@ -8,7 +8,7 @@ import {
   Settings, 
   Clock, 
   Terminal, 
-  Browser,
+  Globe,
   Folder,
   StickyNote,
   Presentation,
@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 // Import all the app components
-import Calculator from './apps/Calculator';
+import CalculatorApp from './apps/Calculator';
 import TextEditor from './apps/TextEditor';
 import CalendarApp from './apps/CalendarApp';
 import SettingsApp from './apps/SettingsApp';
@@ -89,7 +89,7 @@ const apps: App[] = [
     id: 'calculator',
     title: 'Calculator',
     icon: <Calculator className="w-6 h-6" />,
-    component: Calculator,
+    component: CalculatorApp,
     category: 'utilities'
   },
   {
@@ -106,6 +106,13 @@ const apps: App[] = [
     component: PerplexityApp,
     category: 'utilities'
   },
+  {
+    id: 'settings',
+    title: 'Settings',
+    icon: <Settings className="w-6 h-6" />,
+    component: SettingsApp,
+    category: 'utilities'
+  },
   
   // Development
   {
@@ -118,16 +125,9 @@ const apps: App[] = [
   {
     id: 'browser',
     title: 'Browser',
-    icon: <Browser className="w-6 h-6" />,
+    icon: <Globe className="w-6 h-6" />,
     component: BrowserApp,
     category: 'development'
-  },
-  {
-    id: 'settings',
-    title: 'Settings',
-    icon: <Settings className="w-6 h-6" />,
-    component: SettingsApp,
-    category: 'utilities'
   }
 ];
 
