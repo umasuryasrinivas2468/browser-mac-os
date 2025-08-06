@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -40,7 +39,7 @@ const TextEditor: React.FC = () => {
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLImageElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSaveClick = () => {
     setShowSaveDialog(true);

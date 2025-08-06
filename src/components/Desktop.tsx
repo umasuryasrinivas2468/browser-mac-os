@@ -67,7 +67,7 @@ const Desktop: React.FC = () => {
       <DesktopSearchBar />
       
       {/* App Launcher - Always visible */}
-      <AppLauncher />
+      <AppLauncher onClose={() => {}} />
       
       {/* App Launcher Modal */}
       {showAppLauncher && (
