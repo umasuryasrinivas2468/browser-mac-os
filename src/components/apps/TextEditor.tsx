@@ -11,9 +11,14 @@ import {
   Save,
   FileDown,
   Type,
-  Palette
+  Palette,
+  Undo,
+  Redo,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import jsPDF from 'jspdf';
 
 interface TextEditorProps {
@@ -34,7 +39,14 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
   const [fontSize, setFontSize] = useState(14);
   const [fontFamily, setFontFamily] = useState('Arial');
   const [textColor, setTextColor] = useState('#000000');
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [textAlign, setTextAlign] = useState('left');
+  const [history, setHistory] = useState<string[]>(['']);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load file content if initialFileName is provided
   useEffect(() => {
@@ -62,6 +74,8 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         const fileContent = findFile(fileStructure);
         if (fileContent) {
           setContent(fileContent);
+          setHistory([fileContent]);
+          setHistoryIndex(0);
         }
       } catch (error) {
         console.error('Error parsing file structure:', error);
@@ -69,36 +83,52 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
     }
   }, [initialFileName]);
 
-  const formatText = (command: string, value?: string) => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      document.execCommand(command, false, value);
+  // Add to history when content changes
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    
+    // Add to history if it's different from current
+    if (history[historyIndex] !== newContent) {
+      const newHistory = [...history.slice(0, historyIndex + 1), newContent];
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
     }
   };
 
-  const applyFormat = (format: string) => {
+  const undo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
+  const toggleFormat = (format: string) => {
     switch (format) {
       case 'bold':
-        formatText('bold');
+        setIsBold(!isBold);
         break;
       case 'italic':
-        formatText('italic');
+        setIsItalic(!isItalic);
         break;
       case 'underline':
-        formatText('underline');
-        break;
-      case 'align-left':
-        formatText('justifyLeft');
-        break;
-      case 'align-center':
-        formatText('justifyCenter');
-        break;
-      case 'align-right':
-        formatText('justifyRight');
+        setIsUnderline(!isUnderline);
         break;
       default:
         break;
     }
+  };
+
+  const setAlignment = (align: string) => {
+    setTextAlign(align);
   };
 
   const saveFile = () => {
@@ -108,11 +138,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
     try {
       const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
 
-      // Find the file in the structure
+      // Find and update the file in the structure
       const updateFile = (structure: { [key: string]: FileItem }, path: string[] = []): boolean => {
         for (const [key, value] of Object.entries(structure)) {
           if (key === fileName && value.type === 'file') {
             value.content = content;
+            value.savedAt = new Date().toISOString();
             return true;
           }
           if (value.type === 'folder' && value.children) {
@@ -123,7 +154,16 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         return false;
       };
 
-      updateFile(fileStructure);
+      // If file doesn't exist, create it in Documents
+      const fileExists = updateFile(fileStructure);
+      if (!fileExists && fileStructure.Home?.children?.Documents?.children) {
+        fileStructure.Home.children.Documents.children[fileName + '.txt'] = {
+          type: 'file',
+          content: content,
+          savedAt: new Date().toISOString()
+        };
+      }
+
       localStorage.setItem('filemanager_structure', JSON.stringify(fileStructure));
     } catch (error) {
       console.error('Error updating file structure:', error);
@@ -164,17 +204,9 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         console.error('Error saving PDF to file structure:', error);
       }
     }
-
-    pdf.save(`${fileName}.pdf`);
   };
 
   const saveAsDoc = () => {
-    const blob = new Blob([content], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName}.doc`;
-
     // Save to Downloads folder in file structure
     const fileStructureStr = localStorage.getItem('filemanager_structure');
     if (fileStructureStr) {
@@ -195,37 +227,101 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         console.error('Error saving DOC to file structure:', error);
       }
     }
+  };
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const importFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileContent = e.target?.result as string;
+        setContent(fileContent);
+        setFileName(file.name.split('.')[0]);
+        handleContentChange(fileContent);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const getTextStyle = () => {
+    return {
+      fontSize: `${fontSize}px`,
+      fontFamily,
+      color: textColor,
+      fontWeight: isBold ? 'bold' : 'normal',
+      fontStyle: isItalic ? 'italic' : 'normal',
+      textDecoration: isUnderline ? 'underline' : 'none',
+      textAlign: textAlign as 'left' | 'center' | 'right',
+      lineHeight: '1.6'
+    };
   };
 
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* Toolbar */}
-      <div className={`flex items-center space-x-2 p-3 border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
-        <Button onClick={() => applyFormat('bold')} size="sm" variant="ghost">
+      <div className={`flex items-center space-x-2 p-3 border-b ${isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'} flex-wrap`}>
+        {/* Undo/Redo */}
+        <Button onClick={undo} size="sm" variant="ghost" disabled={historyIndex <= 0}>
+          <Undo className="w-4 h-4" />
+        </Button>
+        <Button onClick={redo} size="sm" variant="ghost" disabled={historyIndex >= history.length - 1}>
+          <Redo className="w-4 h-4" />
+        </Button>
+        <div className="w-px h-5 bg-gray-400" />
+        
+        {/* Text Formatting */}
+        <Button 
+          onClick={() => toggleFormat('bold')} 
+          size="sm" 
+          variant={isBold ? "default" : "ghost"}
+        >
           <Bold className="w-4 h-4" />
         </Button>
-        <Button onClick={() => applyFormat('italic')} size="sm" variant="ghost">
+        <Button 
+          onClick={() => toggleFormat('italic')} 
+          size="sm" 
+          variant={isItalic ? "default" : "ghost"}
+        >
           <Italic className="w-4 h-4" />
         </Button>
-        <Button onClick={() => applyFormat('underline')} size="sm" variant="ghost">
+        <Button 
+          onClick={() => toggleFormat('underline')} 
+          size="sm" 
+          variant={isUnderline ? "default" : "ghost"}
+        >
           <Underline className="w-4 h-4" />
         </Button>
         <div className="w-px h-5 bg-gray-400" />
-        <Button onClick={() => applyFormat('align-left')} size="sm" variant="ghost">
+        
+        {/* Alignment */}
+        <Button 
+          onClick={() => setAlignment('left')} 
+          size="sm" 
+          variant={textAlign === 'left' ? "default" : "ghost"}
+        >
           <AlignLeft className="w-4 h-4" />
         </Button>
-        <Button onClick={() => applyFormat('align-center')} size="sm" variant="ghost">
+        <Button 
+          onClick={() => setAlignment('center')} 
+          size="sm" 
+          variant={textAlign === 'center' ? "default" : "ghost"}
+        >
           <AlignCenter className="w-4 h-4" />
         </Button>
-        <Button onClick={() => applyFormat('align-right')} size="sm" variant="ghost">
+        <Button 
+          onClick={() => setAlignment('right')} 
+          size="sm" 
+          variant={textAlign === 'right' ? "default" : "ghost"}
+        >
           <AlignRight className="w-4 h-4" />
         </Button>
         <div className="w-px h-5 bg-gray-400" />
+        
+        {/* Font Controls */}
         <select
           value={fontSize}
           onChange={(e) => setFontSize(parseInt(e.target.value))}
@@ -240,7 +336,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
           onChange={(e) => setFontFamily(e.target.value)}
           className={`bg-transparent border rounded-md px-2 py-1 text-sm ${isDarkMode ? 'border-gray-600 text-white' : 'border-gray-300 text-gray-700'}`}
         >
-          {['Arial', 'Helvetica', 'Times New Roman', 'Courier New'].map((font) => (
+          {['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana'].map((font) => (
             <option key={font} value={font}>{font}</option>
           ))}
         </select>
@@ -248,9 +344,16 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
           type="color"
           value={textColor}
           onChange={(e) => setTextColor(e.target.value)}
-          className="h-8 w-8 rounded-md border-none"
+          className="h-8 w-8 rounded-md border-none cursor-pointer"
+          title="Text Color"
         />
         <div className="w-px h-5 bg-gray-400" />
+        
+        {/* File Operations */}
+        <Button onClick={importFile} size="sm" variant="outline">
+          <Upload className="w-4 h-4 mr-2" />
+          Import
+        </Button>
         <Button onClick={saveFile} size="sm">
           <Save className="w-4 h-4 mr-2" />
           Save
@@ -265,24 +368,28 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
         </Button>
       </div>
 
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,.doc,.docx"
+        onChange={handleFileImport}
+        className="hidden"
+      />
+
       {/* Text Area */}
       <div className="flex-1 p-4">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Start typing your document..."
           className={`w-full h-full resize-none border rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             isDarkMode 
               ? 'bg-gray-800 text-white border-gray-600' 
               : 'bg-white text-gray-900 border-gray-300'
           }`}
-          style={{
-            fontSize: `${fontSize}px`,
-            fontFamily,
-            color: textColor,
-            lineHeight: '1.6'
-          }}
+          style={getTextStyle()}
         />
       </div>
     </div>

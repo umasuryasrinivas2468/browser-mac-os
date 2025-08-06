@@ -14,6 +14,7 @@ import CopyProtection from './CopyProtection';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
+  const [showAppLauncher, setShowAppLauncher] = useState(false);
   
   // Use the dynamic wallpaper hook
   const { timeOfDay, backgroundClass, currentWallpaper } = useDynamicWallpaper(new Date(currentTime));
@@ -23,7 +24,7 @@ const Desktop: React.FC = () => {
   };
 
   const handlePopularAppsClick = () => {
-    console.log('Popular apps clicked');
+    setShowAppLauncher(true);
   };
 
   const handleSearchClick = () => {
@@ -62,8 +63,13 @@ const Desktop: React.FC = () => {
         onMouseEnter={handleMouseEnterBottom}
       />
       
-      {/* Bottom Icons - App Launcher and AI Search */}
-      <AppLauncher />
+      {/* App Launcher in center */}
+      <AppLauncher 
+        isVisible={windows.length === 0 || showAppLauncher}
+        onClose={() => setShowAppLauncher(false)}
+      />
+      
+      {/* AI Search */}
       <DesktopSearchBar />
       
       <Dock />
