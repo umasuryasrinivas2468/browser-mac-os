@@ -1,6 +1,22 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Save, FileText, WrapText } from 'lucide-react';
+import { 
+  Save, 
+  FileText, 
+  WrapText, 
+  Bold, 
+  Italic, 
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Undo,
+  Redo,
+  Upload,
+  Image,
+  Palette
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,15 +25,25 @@ const TextEditor: React.FC = () => {
   const { isDarkMode } = useOS();
   const [content, setContent] = useState('');
   const [fontSize, setFontSize] = useState(14);
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [textColor, setTextColor] = useState('#000000');
   const [wordWrap, setWordWrap] = useState(true);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [fileName, setFileName] = useState('');
   const [saveAsType, setSaveAsType] = useState<'txt' | 'pdf' | 'ppt'>('txt');
+  const [alignment, setAlignment] = useState('left');
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [history, setHistory] = useState<string[]>(['']);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLImageElement>(null);
 
   const handleSaveClick = () => {
     setShowSaveDialog(true);
-    setFileName('untitled');
-    setSaveAsType('txt');
   };
 
   const handleSaveFile = () => {
@@ -58,6 +84,82 @@ const TextEditor: React.FC = () => {
     setFileName('');
   };
 
+  const updateHistory = (newContent: string) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newContent);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    updateHistory(newContent);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
+  const handleFileImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileContent = e.target?.result as string;
+        setContent(fileContent);
+        updateHistory(fileContent);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleImageAttach = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageData = e.target?.result as string;
+        const imageTag = `\n[IMAGE: ${file.name}]\n`;
+        const newContent = content + imageTag;
+        setContent(newContent);
+        updateHistory(newContent);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const getTextStyle = () => ({
+    fontSize: `${fontSize}px`,
+    fontFamily: fontFamily,
+    color: textColor,
+    textAlign: alignment as 'left' | 'center' | 'right',
+    fontWeight: isBold ? 'bold' : 'normal',
+    fontStyle: isItalic ? 'italic' : 'normal',
+    textDecoration: isUnderline ? 'underline' : 'none',
+    whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
+  });
+
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* Toolbar */}
@@ -71,51 +173,156 @@ const TextEditor: React.FC = () => {
             <FileText className="w-4 h-4 mr-1" />
             New
           </Button>
+          <Button onClick={handleFileImport} size="sm" variant="ghost">
+            <Upload className="w-4 h-4 mr-1" />
+            Import
+          </Button>
         </div>
         
         <div className="flex items-center space-x-2">
-          <span className="text-sm">Font Size:</span>
-          <select
-            value={fontSize}
-            onChange={(e) => setFontSize(Number(e.target.value))}
-            className={`px-2 py-1 rounded border ${
-              isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-            }`}
-          >
-            <option value={10}>10px</option>
-            <option value={12}>12px</option>
-            <option value={14}>14px</option>
-            <option value={16}>16px</option>
-            <option value={18}>18px</option>
-            <option value={20}>20px</option>
-            <option value={24}>24px</option>
-          </select>
-          
-          <Button
-            onClick={() => setWordWrap(!wordWrap)}
-            size="sm"
-            variant={wordWrap ? "default" : "ghost"}
-          >
-            <WrapText className="w-4 h-4" />
+          <Button onClick={handleUndo} size="sm" variant="ghost" disabled={historyIndex <= 0}>
+            <Undo className="w-4 h-4" />
+          </Button>
+          <Button onClick={handleRedo} size="sm" variant="ghost" disabled={historyIndex >= history.length - 1}>
+            <Redo className="w-4 h-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Format Toolbar */}
+      <div className={`flex items-center space-x-2 p-2 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <select
+          value={fontFamily}
+          onChange={(e) => setFontFamily(e.target.value)}
+          className={`px-2 py-1 rounded border ${
+            isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          }`}
+        >
+          <option value="Arial">Arial</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+        
+        <select
+          value={fontSize}
+          onChange={(e) => setFontSize(Number(e.target.value))}
+          className={`px-2 py-1 rounded border ${
+            isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+          }`}
+        >
+          <option value={8}>8px</option>
+          <option value={10}>10px</option>
+          <option value={12}>12px</option>
+          <option value={14}>14px</option>
+          <option value={16}>16px</option>
+          <option value={18}>18px</option>
+          <option value={20}>20px</option>
+          <option value={24}>24px</option>
+          <option value={28}>28px</option>
+          <option value={32}>32px</option>
+        </select>
+
+        <input
+          type="color"
+          value={textColor}
+          onChange={(e) => setTextColor(e.target.value)}
+          className="w-8 h-8 rounded border cursor-pointer"
+          title="Text Color"
+        />
+
+        <Button
+          onClick={() => setIsBold(!isBold)}
+          size="sm"
+          variant={isBold ? "default" : "ghost"}
+        >
+          <Bold className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          onClick={() => setIsItalic(!isItalic)}
+          size="sm"
+          variant={isItalic ? "default" : "ghost"}
+        >
+          <Italic className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          onClick={() => setIsUnderline(!isUnderline)}
+          size="sm"
+          variant={isUnderline ? "default" : "ghost"}
+        >
+          <Underline className="w-4 h-4" />
+        </Button>
+
+        <Button
+          onClick={() => setAlignment('left')}
+          size="sm"
+          variant={alignment === 'left' ? "default" : "ghost"}
+        >
+          <AlignLeft className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          onClick={() => setAlignment('center')}
+          size="sm"
+          variant={alignment === 'center' ? "default" : "ghost"}
+        >
+          <AlignCenter className="w-4 h-4" />
+        </Button>
+        
+        <Button
+          onClick={() => setAlignment('right')}
+          size="sm"
+          variant={alignment === 'right' ? "default" : "ghost"}
+        >
+          <AlignRight className="w-4 h-4" />
+        </Button>
+
+        <Button onClick={handleImageAttach} size="sm" variant="ghost">
+          <Image className="w-4 h-4" />
+        </Button>
+
+        <Button
+          onClick={() => setWordWrap(!wordWrap)}
+          size="sm"
+          variant={wordWrap ? "default" : "ghost"}
+        >
+          <WrapText className="w-4 h-4" />
+        </Button>
       </div>
 
       {/* Editor */}
       <div className="flex-1 relative">
         <textarea
+          ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className={`w-full h-full p-4 border-none outline-none resize-none font-mono ${
+          onChange={handleContentChange}
+          className={`w-full h-full p-4 border-none outline-none resize-none ${
             isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
           }`}
-          style={{
-            fontSize: `${fontSize}px`,
-            whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
-          }}
+          style={getTextStyle()}
           placeholder="Start typing..."
         />
       </div>
+
+      {/* Hidden file inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,.doc,.docx"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
 
       {/* Save Dialog */}
       {showSaveDialog && (

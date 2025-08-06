@@ -66,6 +66,9 @@ const Desktop: React.FC = () => {
       {/* Bottom Icons - AI Search */}
       <DesktopSearchBar />
       
+      {/* App Launcher - Always visible */}
+      <AppLauncher />
+      
       {/* App Launcher Modal */}
       {showAppLauncher && (
         <AppLauncher onClose={() => setShowAppLauncher(false)} />
