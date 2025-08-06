@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { Plus, Search, Trash2, FileDown } from 'lucide-react';
@@ -135,11 +136,12 @@ const NotesApp: React.FC = () => {
   const saveAsPPT = () => {
     if (!selectedNote) return;
     
+    const pptFileName = `${selectedNote.title}.pptx`;
+    
     // Save to Downloads folder in file structure
     const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
     try {
       const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-      const pptFileName = `${selectedNote.title}.pptx`;
       
       // Ensure Downloads folder structure exists
       if (!fileStructure.Downloads) {

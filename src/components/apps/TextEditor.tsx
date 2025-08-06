@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { 
@@ -143,11 +144,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ initialFileName }) => {
       yPosition += 10;
     });
 
+    const pdfFileName = `${fileName}.pdf`;
+
     // Save to Downloads folder in file structure
     const fileStructureStr = localStorage.getItem('filemanager_structure') || '{}';
     try {
       const fileStructure = JSON.parse(fileStructureStr) as { [key: string]: FileItem };
-      const pdfFileName = `${fileName}.pdf`;
       
       // Ensure Downloads folder structure exists
       if (!fileStructure.Downloads) {
