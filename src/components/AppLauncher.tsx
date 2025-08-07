@@ -215,45 +215,22 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
 
   return (
     <div className="app-launcher-container">
-      {/* App Launcher Button - Center of screen when no apps open */}
-      {windows.length === 0 && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
-          <button
-            onClick={handleToggle}
-            className={`pointer-events-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-md border-2 ${
-              isDarkMode 
-                ? 'bg-gray-800/90 hover:bg-gray-700/90 border-gray-600 text-white' 
-                : 'bg-white/90 hover:bg-gray-100/90 border-gray-300 text-gray-700'
-            } shadow-xl`}
-            title="App Launcher"
-          >
-            {isOpen ? (
-              <X className="w-8 h-8" />
-            ) : (
-              <Grid3X3 className="w-8 h-8" />
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Small App Launcher Button - Bottom Left Corner when apps are open */}
-      {windows.length > 0 && isVisible && (
-        <button
-          onClick={handleToggle}
-          className={`fixed bottom-4 left-4 z-50 pointer-events-auto w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-md border ${
-            isDarkMode 
-              ? 'bg-gray-800/80 hover:bg-gray-700/80 border-gray-600' 
-              : 'bg-white/80 hover:bg-gray-100/80 border-gray-200'
-          } shadow-lg`}
-          title="App Launcher"
-        >
-          {isOpen ? (
-            <X className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
-          ) : (
-            <Grid3X3 className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
-          )}
-        </button>
-      )}
+      {/* App Launcher Button - Always in bottom left corner */}
+      <button
+        onClick={handleToggle}
+        className={`fixed bottom-4 left-4 z-50 pointer-events-auto w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-md border ${
+          isDarkMode 
+            ? 'bg-gray-800/80 hover:bg-gray-700/80 border-gray-600' 
+            : 'bg-white/80 hover:bg-gray-100/80 border-gray-200'
+        } shadow-lg`}
+        title="App Launcher"
+      >
+        {isOpen ? (
+          <X className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
+        ) : (
+          <Grid3X3 className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
+        )}
+      </button>
 
       {/* App Grid Modal */}
       {isOpen && (
