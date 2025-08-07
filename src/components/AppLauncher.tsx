@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { Plus, X, Search, Calculator as CalculatorIcon, FileText, Folder, Settings, Terminal, Clock, Calendar, Building2, Users, Code, FileSpreadsheet, Map, Globe, Target, Grid3X3, Presentation, Gamepad2 } from 'lucide-react';
+import { Plus, X, Search, Calculator as CalculatorIcon, FileText, Folder, Settings, Terminal, Clock, Calendar, Building2, Users, Code, FileSpreadsheet, Globe, Grid3X3, Presentation, Gamepad2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 // Import all app components
@@ -14,7 +13,7 @@ import SettingsApp from './apps/SettingsApp';
 import CalendarApp from './apps/CalendarApp';
 import ClockApp from './apps/ClockApp';
 import TerminalApp from './apps/TerminalApp';
-import MapsAppDemo from './apps/MapsAppDemo';
+import MapsApp from './apps/MapsApp';
 import AczenSheetsApp from './apps/AczenSheetsApp';
 import AczenBilzApp from './apps/AczenBilzApp';
 import AczenCRMApp from './apps/AczenCRMApp';
@@ -108,9 +107,9 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
     {
       id: 'maps',
       name: 'Maps',
-      icon: Map,
-      component: MapsAppDemo,
-      description: 'Interactive maps',
+      icon: Globe,
+      component: MapsApp,
+      description: 'Interactive maps with OpenStreetMap',
       color: 'bg-green-500'
     },
     {
@@ -214,11 +213,6 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
     };
   }, [isOpen]);
 
-  // Show app launcher button only when no windows are open or when explicitly visible
-  const shouldShowButton = windows.length === 0 || isVisible;
-
-  if (!shouldShowButton && !isOpen) return null;
-
   return (
     <div className="app-launcher-container">
       {/* App Launcher Button - Center of screen when no apps open */}
@@ -246,7 +240,7 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
       {windows.length > 0 && isVisible && (
         <button
           onClick={handleToggle}
-          className={`fixed bottom-4 left-4 z-50 pointer-events-auto w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-md border ${
+          className={`fixed bottom-4 left-4 z-50 pointer-events-auto w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110 backdrop-blur-md border ${
             isDarkMode 
               ? 'bg-gray-800/80 hover:bg-gray-700/80 border-gray-600' 
               : 'bg-white/80 hover:bg-gray-100/80 border-gray-200'
@@ -254,9 +248,9 @@ const AppLauncher: React.FC<AppLauncherProps> = ({ isVisible = true, onClose }) 
           title="App Launcher"
         >
           {isOpen ? (
-            <X className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
+            <X className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
           ) : (
-            <Grid3X3 className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
+            <Grid3X3 className={`w-6 h-6 ${isDarkMode ? 'text-white' : 'text-gray-700'}`} />
           )}
         </button>
       )}

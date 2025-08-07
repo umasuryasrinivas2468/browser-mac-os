@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { X, Search, Bot, Loader2, AlertCircle, Wand2 } from 'lucide-react';
+import { X, Search, Bot, Loader2, AlertCircle, Wand2, FileText, Presentation, FileSpreadsheet } from 'lucide-react';
 import { MistralService } from '@/services/mistralService';
 
 interface SearchPopupProps {
@@ -172,24 +172,6 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     onClose();
   };
 
-  const testMistralAPI = async () => {
-    setIsGenerating(true);
-    setError('');
-    setResult('Testing Mistral API connection...');
-
-    try {
-      const testContent = await MistralService.generateQuickContent('Say hello and confirm the API is working');
-      setResult(`✅ Mistral API is working! Response: ${testContent}`);
-    } catch (err) {
-      console.error('Mistral API test failed:', err);
-      setError(`❌ Mistral API test failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-
-
   const handleGenerateDocument = async (type: 'pdf' | 'ppt' | 'sheets') => {
     if (!query.trim()) {
       setError('Please enter a prompt to generate the document');
@@ -341,43 +323,18 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
             </button>
           </form>
 
-          {/* AI Generation Section */}
-          <div className="space-y-4">
+          {/* AI Generation Section - Smaller buttons with icons */}
+          <div className="space-y-3">
             <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               Generate documents with AI:
             </div>
             
-            {/* AI Suggestions */}
-            <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} space-y-2`}>
-              <div className="flex items-center justify-between">
-                <span>💡 AI Suggestions:</span>
-                <button
-                  onClick={testMistralAPI}
-                  disabled={isGenerating}
-                  className={`px-2 py-1 text-xs rounded-lg ${
-                    isGenerating 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
-                  }`}
-                >
-                  Test API
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-1">
-                <span>• "Create a business plan for a coffee shop"</span>
-                <span>• "Make a presentation about renewable energy"</span>
-                <span>• "Generate a budget spreadsheet for a startup"</span>
-                <span>• "Write a project proposal for mobile app development"</span>
-                <span>• "Create a marketing strategy document"</span>
-              </div>
-            </div>
-            
-            {/* Document Generation Buttons - 3cm height with corner radius */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Document Generation Buttons - Smaller with icons and 1cm height */}
+            <div className="flex space-x-3">
               <button
                 onClick={() => handleGenerateDocument('pdf')}
                 disabled={isGenerating || !query.trim()}
-                className={`h-28 flex flex-col items-center justify-center rounded-2xl border-2 transition-all duration-200 ${
+                className={`flex-1 h-10 flex items-center justify-center space-x-2 rounded-xl border-2 transition-all duration-200 ${
                   isGenerating && generatingType === 'pdf'
                     ? 'bg-purple-100 border-purple-300 text-purple-700'
                     : isGenerating || !query.trim()
@@ -385,21 +342,22 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
                     : isDarkMode
                     ? 'bg-gray-800 border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-white'
                     : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-900'
-                } hover:scale-105 shadow-lg hover:shadow-xl`}
+                } hover:scale-105 shadow-md hover:shadow-lg`}
               >
                 {isGenerating && generatingType === 'pdf' ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-2" />
-                ) : null}
-                <span className="text-lg font-semibold">PDF Document</span>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                  {isGenerating && generatingType === 'pdf' ? 'Generating...' : 'Generate & Edit'}
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">
+                  {isGenerating && generatingType === 'pdf' ? 'Generating...' : 'PDF'}
                 </span>
               </button>
 
               <button
                 onClick={() => handleGenerateDocument('ppt')}
                 disabled={isGenerating || !query.trim()}
-                className={`h-28 flex flex-col items-center justify-center rounded-2xl border-2 transition-all duration-200 ${
+                className={`flex-1 h-10 flex items-center justify-center space-x-2 rounded-xl border-2 transition-all duration-200 ${
                   isGenerating && generatingType === 'ppt'
                     ? 'bg-purple-100 border-purple-300 text-purple-700'
                     : isGenerating || !query.trim()
@@ -407,21 +365,22 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
                     : isDarkMode
                     ? 'bg-gray-800 border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-white'
                     : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-900'
-                } hover:scale-105 shadow-lg hover:shadow-xl`}
+                } hover:scale-105 shadow-md hover:shadow-lg`}
               >
                 {isGenerating && generatingType === 'ppt' ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-2" />
-                ) : null}
-                <span className="text-lg font-semibold">Presentation</span>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                  {isGenerating && generatingType === 'ppt' ? 'Generating...' : 'Generate & Edit'}
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                ) : (
+                  <Presentation className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">
+                  {isGenerating && generatingType === 'ppt' ? 'Generating...' : 'PPT'}
                 </span>
               </button>
 
               <button
                 onClick={() => handleGenerateDocument('sheets')}
                 disabled={isGenerating || !query.trim()}
-                className={`h-28 flex flex-col items-center justify-center rounded-2xl border-2 transition-all duration-200 ${
+                className={`flex-1 h-10 flex items-center justify-center space-x-2 rounded-xl border-2 transition-all duration-200 ${
                   isGenerating && generatingType === 'sheets'
                     ? 'bg-purple-100 border-purple-300 text-purple-700'
                     : isGenerating || !query.trim()
@@ -429,20 +388,19 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
                     : isDarkMode
                     ? 'bg-gray-800 border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-white'
                     : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-900'
-                } hover:scale-105 shadow-lg hover:shadow-xl`}
+                } hover:scale-105 shadow-md hover:shadow-lg`}
               >
                 {isGenerating && generatingType === 'sheets' ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-2" />
-                ) : null}
-                <span className="text-lg font-semibold">Spreadsheet</span>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                  {isGenerating && generatingType === 'sheets' ? 'Generating...' : 'Generate & Edit'}
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                ) : (
+                  <FileSpreadsheet className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">
+                  {isGenerating && generatingType === 'sheets' ? 'Generating...' : 'Sheet'}
                 </span>
               </button>
             </div>
           </div>
-
-
         </div>
 
         {/* Results */}
