@@ -1,3 +1,4 @@
+
 import { Mistral } from '@mistralai/mistralai';
 
 const apiKey = import.meta.env.VITE_MISTRAL_API_KEY || 'GTq7WIgbPGsZvaEAeimxSAspQ7XDGUGm';
@@ -37,6 +38,32 @@ export interface GeneratedContent {
   title: string;
   content: any;
   metadata?: any;
+  // PDF specific properties
+  sections?: Array<{
+    title: string;
+    content: string;
+  }>;
+  // PPT specific properties
+  slides?: Array<{
+    title: string;
+    content: string | string[];
+    speakerNotes?: string;
+    notes?: string;
+  }>;
+  theme?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+  };
+  // Sheets specific properties
+  headers?: string[];
+  data?: any[][];
+  formulas?: Array<{
+    cell?: string;
+    formula: string;
+    description?: string;
+  }>;
 }
 
 export class MistralService {
@@ -109,18 +136,29 @@ export class MistralService {
         throw new Error('No response from Mistral API');
       }
 
+      // Handle the response content properly
+      let contentString: string;
+      if (typeof responseContent === 'string') {
+        contentString = responseContent;
+      } else {
+        // If it's an array of ContentChunk, convert to string
+        contentString = Array.isArray(responseContent) 
+          ? responseContent.map(chunk => typeof chunk === 'string' ? chunk : JSON.stringify(chunk)).join('')
+          : JSON.stringify(responseContent);
+      }
+
       // Try to parse JSON response
       let parsedContent;
       try {
         // Extract JSON from the response if it's wrapped in markdown
-        const jsonMatch = responseContent.match(/```json\n([\s\S]*?)\n```/) || responseContent.match(/```\n([\s\S]*?)\n```/);
-        const jsonString = jsonMatch ? jsonMatch[1] : responseContent;
+        const jsonMatch = contentString.match(/```json\n([\s\S]*?)\n```/) || contentString.match(/```\n([\s\S]*?)\n```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : contentString;
         parsedContent = JSON.parse(jsonString);
       } catch (parseError) {
         // If JSON parsing fails, create a structured response
         parsedContent = {
           title: `Generated ${request.type.toUpperCase()} Document`,
-          content: responseContent,
+          content: contentString,
           metadata: {
             generatedAt: new Date().toISOString(),
             type: request.type
@@ -176,7 +214,14 @@ export class MistralService {
       const content = chatResponse.choices?.[0]?.message?.content;
       console.log('Extracted content:', content);
       
-      return content || 'No response generated';
+      // Handle the content properly
+      if (typeof content === 'string') {
+        return content;
+      } else if (Array.isArray(content)) {
+        return content.map(chunk => typeof chunk === 'string' ? chunk : JSON.stringify(chunk)).join('');
+      } else {
+        return content ? JSON.stringify(content) : 'No response generated';
+      }
     } catch (error: any) {
       console.error('Error generating quick content:', error);
       
