@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOS } from '@/contexts/OSContext';
 import { useDynamicWallpaper } from '@/hooks/use-dynamic-wallpaper';
@@ -14,7 +13,6 @@ import CopyProtection from './CopyProtection';
 const Desktop: React.FC = () => {
   const { isDarkMode, windows, currentTime, isDockVisible, setIsDockVisible } = useOS();
   const [showMouseArea, setShowMouseArea] = useState(false);
-  const [showAppLauncher, setShowAppLauncher] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   
   // Update current date every minute to trigger wallpaper changes
@@ -36,7 +34,7 @@ const Desktop: React.FC = () => {
   };
 
   const handlePopularAppsClick = () => {
-    setShowAppLauncher(true);
+    console.log('Popular apps clicked');
   };
 
   const handleSearchClick = () => {
@@ -75,11 +73,8 @@ const Desktop: React.FC = () => {
         onMouseEnter={handleMouseEnterBottom}
       />
       
-      {/* App Launcher in center */}
-      <AppLauncher 
-        isVisible={windows.length === 0 || showAppLauncher}
-        onClose={() => setShowAppLauncher(false)}
-      />
+      {/* App Launcher - always available but changes position */}
+      <AppLauncher isVisible={true} />
       
       {/* AI Search */}
       <DesktopSearchBar />
