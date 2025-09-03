@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOS } from '@/contexts/OSContext';
-import { X, Search, Bot, Loader2, AlertCircle, Wand2, FileText, Presentation, FileSpreadsheet } from 'lucide-react';
+import { X, Search, Bot, Loader2, AlertCircle, Wand2, FileText, Presentation, FileSpreadsheet, Plus, ExternalLink } from 'lucide-react';
 import { MistralService } from '@/services/mistralService';
 
 interface SearchPopupProps {
@@ -18,6 +18,9 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
   const [error, setError] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingType, setGeneratingType] = useState<'pdf' | 'ppt' | 'sheets' | null>(null);
+  const [webLinks, setWebLinks] = useState<Array<{title: string, url: string, description?: string}>>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [followUpQuery, setFollowUpQuery] = useState('');
 
   // Custom responses for Aczen queries
   const getCustomResponse = (searchQuery: string): string | null => {
@@ -77,11 +80,19 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     setIsLoading(true);
     setHasSearched(true);
     setError('');
+    setWebLinks([]);
+    
+    // Add to search history
+    if (!searchHistory.includes(searchQuery)) {
+      setSearchHistory(prev => [searchQuery, ...prev.slice(0, 4)]);
+    }
     
     // Check for custom responses first
     const customResponse = getCustomResponse(searchQuery);
     if (customResponse) {
       setResult(customResponse);
+      // Still fetch web links for custom responses
+      fetchWebLinks(searchQuery);
       setIsLoading(false);
       return;
     }
@@ -130,6 +141,8 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
       if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
         setResult(data.candidates[0].content.parts[0].text);
         setError('');
+        // Fetch web links after getting AI response
+        fetchWebLinks(searchQuery);
       } else {
         throw new Error('Invalid response format from API');
       }
@@ -155,6 +168,64 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     }
   };
 
+  const fetchWebLinks = async (searchQuery: string) => {
+    try {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
+            {
+              role: 'system',
+              content: 'Return only the top 4-5 most relevant website links for the query. Format as JSON array with objects containing "title", "url", and "description" fields.'
+            },
+            {
+              role: 'user',
+              content: `Find relevant websites for: ${searchQuery}`
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 500,
+          return_images: false,
+          return_related_questions: false
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        
+        if (content) {
+          try {
+            const links = JSON.parse(content);
+            if (Array.isArray(links)) {
+              setWebLinks(links.slice(0, 5));
+            }
+          } catch {
+            // If JSON parsing fails, create simple links from the content
+            const mockLinks = [
+              { title: "Search Results", url: `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, description: "View more search results" },
+              { title: "Wikipedia", url: `https://en.wikipedia.org/wiki/${encodeURIComponent(searchQuery)}`, description: "Encyclopedia information" }
+            ];
+            setWebLinks(mockLinks);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching web links:', error);
+      // Fallback links
+      const fallbackLinks = [
+        { title: "Google Search", url: `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, description: "Search on Google" },
+        { title: "Wikipedia", url: `https://en.wikipedia.org/wiki/${encodeURIComponent(searchQuery)}`, description: "Encyclopedia information" }
+      ];
+      setWebLinks(fallbackLinks);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoading && query.trim()) {
@@ -169,7 +240,26 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
     setError('');
     setIsGenerating(false);
     setGeneratingType(null);
+    setWebLinks([]);
+    setFollowUpQuery('');
     onClose();
+  };
+
+  const handleNewSearch = () => {
+    setQuery('');
+    setResult('');
+    setHasSearched(false);
+    setError('');
+    setWebLinks([]);
+    setFollowUpQuery('');
+  };
+
+  const handleFollowUpSearch = () => {
+    if (followUpQuery.trim()) {
+      setQuery(followUpQuery);
+      handleSearch(followUpQuery);
+      setFollowUpQuery('');
+    }
   };
 
   const handleGenerateDocument = async (type: 'pdf' | 'ppt' | 'sheets') => {
@@ -276,14 +366,29 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
               AI Search
             </h2>
           </div>
-          <button
-            onClick={handleClose}
-            className={`p-1 rounded-lg hover:bg-gray-100 transition-colors ${
-              isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
-            }`}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {hasSearched && (
+              <button
+                onClick={handleNewSearch}
+                className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Search</span>
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className={`p-1 rounded-lg hover:bg-gray-100 transition-colors ${
+                isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-500'
+              }`}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Search Input */}
@@ -433,9 +538,102 @@ const SearchPopup: React.FC<SearchPopupProps> = ({ isOpen, onClose, initialQuery
               </button>
             </div>
           ) : result ? (
-            <div className={`prose max-w-none ${isDarkMode ? 'prose-invert' : ''}`}>
-              <div className={`whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {result}
+            <div className="space-y-4">
+              {/* AI Response */}
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-start space-x-3">
+                  <Bot className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className={`text-sm whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {result}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Web Links Section */}
+              {webLinks.length > 0 && (
+                <div className={`p-4 rounded-lg border ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <ExternalLink className="w-4 h-4 text-blue-500" />
+                    <h4 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Related Websites
+                    </h4>
+                  </div>
+                  <div className="space-y-2">
+                    {webLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block p-3 rounded-lg border transition-colors hover:scale-[1.02] ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h5 className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                              {link.title}
+                            </h5>
+                            {link.description && (
+                              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {link.description}
+                              </p>
+                            )}
+                          </div>
+                          <ExternalLink className="w-3 h-3 text-gray-400 ml-2 mt-0.5" />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Follow-up Search */}
+              <div className={`p-4 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <h4 className={`text-sm font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Follow-up Search
+                </h4>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={followUpQuery}
+                    onChange={(e) => setFollowUpQuery(e.target.value)}
+                    placeholder="Ask a follow-up question..."
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    onKeyPress={(e) => e.key === 'Enter' && handleFollowUpSearch()}
+                  />
+                  <button
+                    onClick={handleFollowUpSearch}
+                    disabled={!followUpQuery.trim() || isLoading}
+                    className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                      !followUpQuery.trim() || isLoading
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    Search
+                  </button>
+                </div>
               </div>
             </div>
           ) : hasSearched ? (
