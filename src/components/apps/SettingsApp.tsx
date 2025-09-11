@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useOS } from '@/contexts/OSContext';
+import StorageChart from '@/components/StorageChart';
 import { 
   Monitor, 
   User, 
@@ -321,6 +322,16 @@ const SettingsApp: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )
+    },
+    {
+      id: 'storage',
+      title: 'Storage',
+      icon: HardDrive,
+      content: (
+        <div className="space-y-6">
+          <StorageChart isDarkMode={isDarkMode} />
         </div>
       )
     },
