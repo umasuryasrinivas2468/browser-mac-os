@@ -16,7 +16,7 @@ interface OSContextType {
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
   windows: WindowState[];
-  openWindow: (app: { id: string; title: string; component: React.ComponentType<any> }) => void;
+  openWindow: (app: { id: string; title: string; component: React.ComponentType<any>; data?: any }) => void;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
@@ -112,7 +112,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   }, [isDarkMode]);
 
-  const openWindow = (app: { id: string; title: string; component: React.ComponentType<any> }) => {
+  const openWindow = (app: { id: string; title: string; component: React.ComponentType<any>; data?: any }) => {
     const existingWindow = windows.find(w => w.id === app.id);
     if (existingWindow) {
       focusWindow(app.id);
