@@ -1,19 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sparkles, Send, Loader2, FileText, Presentation, Code, Image as ImageIcon, Plus, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import PptxGenJS from "pptxgenjs";
-
-// Lazy load supabase to avoid initialization errors
-let supabase: any = null;
-const getSupabase = async () => {
-  if (!supabase) {
-    const { supabase: client } = await import("@/integrations/supabase/client");
-    supabase = client;
-  }
-  return supabase;
-};
 
 interface AssistAppProps {
   onOpenApp?: (appId: string, data?: any) => void;
@@ -24,21 +15,7 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
   const [title, setTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [imagePrompts, setImagePrompts] = useState<string[]>([]);
-  const [isReady, setIsReady] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Check if environment is ready
-    const checkEnv = async () => {
-      try {
-        await getSupabase();
-        setIsReady(true);
-      } catch (error) {
-        console.error("Supabase not ready:", error);
-      }
-    };
-    checkEnv();
-  }, []);
 
   const handleGenerate = async (type: 'ppt' | 'doc' | 'code') => {
     if (!prompt.trim()) {
@@ -53,8 +30,7 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
     setIsGenerating(true);
 
     try {
-      const supabaseClient = await getSupabase();
-      const { data, error } = await supabaseClient.functions.invoke('assist-generate', {
+      const { data, error } = await supabase.functions.invoke('assist-generate', {
         body: { 
           type, 
           prompt, 
@@ -202,18 +178,6 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
     updated[index] = value;
     setImagePrompts(updated);
   };
-
-  // Show loading state while environment initializes
-  if (!isReady) {
-    return (
-      <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
-          <p className="text-slate-300">Initializing Assist...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col items-center justify-center p-8 relative overflow-hidden">
