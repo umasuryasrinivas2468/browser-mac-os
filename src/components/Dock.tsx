@@ -14,8 +14,7 @@ import {
   Users,
   Code,
   FileSpreadsheet,
-  Map,
-  Sparkles
+  Map
 } from 'lucide-react';
 import SettingsApp from '@/components/apps/SettingsApp';
 import FileManager from '@/components/apps/FileManager';
@@ -31,19 +30,11 @@ import AczenCRMApp from '@/components/apps/AczenCRMApp';
 import AczenIDEApp from '@/components/apps/AczenIDEApp';
 import AczenSheetsApp from '@/components/apps/AczenSheetsApp';
 import MapsAppDemo from '@/components/apps/MapsAppDemo';
-import { AssistApp } from '@/components/apps/AssistApp';
 
 const Dock: React.FC = () => {
   const { openWindow, isDarkMode, windows, isDockVisible } = useOS();
 
   const dockApps = [
-    {
-      id: 'assist',
-      title: 'Assist',
-      icon: Sparkles,
-      component: AssistApp,
-      color: 'bg-emerald-500'
-    },
     {
       id: 'browser',
       title: 'Web Browser',
