@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { Sparkles, Send, Loader2, FileText, Presentation, Code, Image as ImageIcon, Plus, Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Send, Loader2, FileText, Presentation, Code, Image as ImageIcon, Plus, Lightbulb, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import PptxGenJS from "pptxgenjs";
 
 interface AssistAppProps {
@@ -15,7 +14,25 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
   const [title, setTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [imagePrompts, setImagePrompts] = useState<string[]>([]);
+  const [isCloudReady, setIsCloudReady] = useState(false);
+  const [checkingCloud, setCheckingCloud] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if Cloud backend is configured
+    const checkCloudConfig = () => {
+      const hasUrl = import.meta.env.VITE_SUPABASE_URL;
+      const hasKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      if (hasUrl && hasKey) {
+        setIsCloudReady(true);
+      }
+      setCheckingCloud(false);
+    };
+    
+    // Small delay to allow env vars to load
+    setTimeout(checkCloudConfig, 500);
+  }, []);
 
   const handleGenerate = async (type: 'ppt' | 'doc' | 'code') => {
     if (!prompt.trim()) {
@@ -30,16 +47,29 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
     setIsGenerating(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('assist-generate', {
-        body: { 
-          type, 
-          prompt, 
-          title: title || `Untitled ${type.toUpperCase()}`,
-          imagePrompts: type === 'ppt' ? imagePrompts : []
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assist-generate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            type, 
+            prompt, 
+            title: title || `Untitled ${type.toUpperCase()}`,
+            imagePrompts: type === 'ppt' ? imagePrompts : []
+          })
         }
-      });
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (type === 'ppt') {
         await handlePPTGeneration(data);
@@ -178,6 +208,39 @@ export const AssistApp = ({ onOpenApp }: AssistAppProps) => {
     updated[index] = value;
     setImagePrompts(updated);
   };
+
+  if (checkingCloud) {
+    return (
+      <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
+          <p className="text-slate-300">Initializing backend...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isCloudReady) {
+    return (
+      <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-8">
+        <div className="max-w-md text-center space-y-6">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-white">Backend Not Configured</h2>
+            <p className="text-slate-300">
+              This app requires Lovable Cloud to be enabled. Please refresh the page and wait a moment for the backend to initialize.
+            </p>
+          </div>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-emerald-500 hover:bg-emerald-600"
+          >
+            Refresh Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col items-center justify-center p-8 relative overflow-hidden">
